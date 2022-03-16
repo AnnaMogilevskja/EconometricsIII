@@ -10,9 +10,51 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(dplyr)
+library(forecast)
+library(TSstudio)
+library(stringr)
+library(zoo)
 library(ggplot2)
-library(fixest)
-library(car)
-library()
+library(tseries)
 ```
+
+# Question 1
+
+```{r}
+# Load data
+data <- read.csv("data_assign_p1.csv")
+```
+
+a) 
+
+```{r}
+fmt <- "%YQ%q"
+data$obs <- as.yearqtr(data$obs, format = fmt)
+```
+
+
+```{r}
+ggplot(data, aes(obs, GDP_QGR)) + 
+  geom_point() + 
+  geom_line() +
+  scale_x_yearqtr(format = fmt)
+```
+```{r}
+Acf(
+  data$GDP_QGR,
+  lag.max = 12
+)
+```
+```{r}
+Pacf(
+  data$GDP_QGR,
+  lag.max = 12
+)
+```
+
+b) 
+
+```{r}
+arma(data$GDP_QGR, order = c(4, 0))
+```
+

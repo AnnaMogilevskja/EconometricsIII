@@ -16,6 +16,8 @@ library(stringr)
 library(zoo)
 library(ggplot2)
 library(tseries)
+library(stats)
+library(lmtest)
 ```
 
 # Question 1
@@ -25,7 +27,7 @@ library(tseries)
 data <- read.csv("data_assign_p1.csv")
 ```
 
-a) 
+1.) 
 
 ```{r}
 fmt <- "%YQ%q"
@@ -52,9 +54,44 @@ Pacf(
 )
 ```
 
-b) 
+2.)
 
 ```{r}
-arma(data$GDP_QGR, order = c(4, 0))
+ar4 <- arima(data$GDP_QGR, order = c(4,0,0))
+coeftest(ar4)
 ```
+
+```{r}
+ar3 <- arima(data$GDP_QGR, order = c(3,0,0))
+coeftest(ar3)
+```
+
+```{r}
+ar2 <- arima(data$GDP_QGR, order = c(2,0,0))
+coeftest(ar2)
+```
+
+```{r}
+ar1 <- arima(data$GDP_QGR, order = c(1,0,0))
+coeftest(ar1)
+```
+
+3.)
+```{r}
+checkresiduals(ar1)
+```
+
+4.)
+
+```{r}
+plot(predict(ar1, n.ahead=8)$pred, type="l")
+```
+```{r}
+fore_arima = forecast::forecast(ar1, h=8)
+df_arima = as.data.frame(fore_arima)
+plot(df_arima$`Point Forecast`, type="l")
+```
+add to previous graph for sake of visual sanity
+
+5.)
 

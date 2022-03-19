@@ -54,6 +54,7 @@ Pacf(
   lag.max = 12
 )
 ```
+The ACF is the autocorrelation function and measures the autocorrelation between $X_t$ and $X_{t-h} \forall h$, in our case for $h = \{1, 2, ..., 12\}$. The autocorrelation is an indicator for memory: the higher the correlation, the higher the time dependence. Hence, the ACF also is a good first indicator for the selection of the lags of our time series model (corresponding to the Box-Jenkins approach). The partial autocorrelation function (PACF) goes one step further, controlling for other lags. Looking at our ACF and PACF graphs, we can see that the first lag seem to have a significant effect on our GDP while higher lags have a rather small autocorrelation with $X_t$. 
 
 2.) Estimate an AR(p) model for the same time-series. Please use the general-to-specific modeling approach by starting with a total p = 4 lags and removing insignificant lags sequentially. Report the final estimated AR(p) model, working at a 5% significance level. Comment on the estimated coefficients. What do these coefficients tell you about the dynamic properties of the GDP quarterly growth rate?
 
@@ -77,35 +78,46 @@ coeftest(ar2)
 ar1 <- arima(data$GDP_QGR, order = c(1,0,0))
 coeftest(ar1)
 ```
+As only the estimator of the first lag has a significant effect (which can be observed in all model specification), our final model specification is an AR(1) model. The estimator is around $0.27191$. Hence, an increase in the previous period's GDP growth by $1\%$, increases the next period's GDP growth by approximately $0.22\%$. 
 
 3.) Check the regression residuals of the estimated AR(p) model for autocorrelation by plotting the estimated residual ACF function. Does the model seem well specified?
 ```{r}
 checkresiduals(ar1)
 ```
+There is no autocorrelation between the regression residuals of the estimated AR(1) model. Therefore, the model seems to be well specified. 
 
 4.) Make use of your estimated AR model to produce a 2-year (8 quarters) forecast for the Dutch GDP quarterly growth rate that spans until the first quarter of 2011. Report the values you obtained and explain how you derived them.
+```{r}
+seriesdata <- ts(data$GDP_QGR, start= c(1987, 2), end = c(2009, 1), frequency = 4)
+forecast1 <- ts(predict(ar1, n.ahead=8)$pred, start = c(2009,2), frequency = 4)
+forecast1
+```
+
 
 ```{r}
-plot(predict(ar1, n.ahead=8)$pred, type="l")
+ts.plot(forecast1, type="l")
 ```
-```{r}
-ts.plot(data$GDP_QGR[-(1:40)])
-forecast1 <- predict(ar1, n.ahead=8)$pred
-se1 <- predict(ar1, n.ahead=8)$se
-points(forecast1, type="l", col=2)
-```
-add to previous graph for sake of visual sanity, add quarters on axis
+We used the function predict() to forecast the next 8 quarters based on the AR(1) model. It gives us a time series of predictions, using finite-history prediction (https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/predict.Arima).
+The algorithm is based on the Kalman filter (https://www.jstor.org/stable/pdf/2347987.pdf?casa_token=YM8e7AtkQeUAAAAA:iKQiv7RxaEzEBcvzWiMcCKERAXdYmC8XT1hnKuhGYsgsr53gT48e2qJex4rkupEafCimogVYWp1sLz9KmYjUiH-nVpbYCgoiOfnbVC-k4UypJenakvI). 
 
 5.)  Suppose that the innovations in your AR model are iid Gaussian. Produce 95% confidence intervals for your 2-year forecast. Furthermore, comment on the following statement issued by government officials: “Given the available GDP data, we believe that there is a low probability that the Dutch GDP growth rate will remain negative in the second quarter of 2009.”
+
+
 ```{r}
-ts.plot(data$GDP_QGR)
-forecast1 <- predict(ar1, n.ahead=8)$pred
-se1 <- predict(ar1, n.ahead=8)$se
+ts.plot(seriesdata, xlim = c(1987, 2011))
+se1 <- ts(predict(ar1, n.ahead=8)$se, start = c(2009,2), frequency = 4)
 points(forecast1, type="l", col=2)
 points(forecast1 - 1.96*se1, type="l", col=2, lty=2)
 points(forecast1 + 1.96*se1, type="l", col=2, lty=2)
 ```
-figure out axis and add
+
+```{r}
+ts.plot(seriesdata, xlim = c(2005, 2011))
+se1 <- ts(predict(ar1, n.ahead=8)$se, start = c(2009,2), frequency = 4)
+points(forecast1, type="l", col=2)
+points(forecast1 - 1.96*se1, type="l", col=2, lty=2)
+points(forecast1 + 1.96*se1, type="l", col=2, lty=2)
+```
 
 ```{r}
 t_stat = (forecast1[1]-0)/se1[1]
@@ -117,10 +129,17 @@ pt(t_stat, n-2, lower.tail = FALSE)
 
 7.) Suppose that 2 years have passed since you delivered your forecasts to the government, in the first quarter of 2009. Compare your point forecasts and confidence bounds with the following actual observed values for the 12 quarters from 2009q2 to 2011q1. Please comment on the accuracy of your forecasts.
 ```{r}
-ts.plot(data$GDP_QGR)
-forecast1 <- predict(ar1, n.ahead=8)$pred
-se1 <- predict(ar1, n.ahead=8)$se
-re <- ts(c(-1.63,0.28, 0.33, 0.66, 1.59, 0.51, 0.71, 0.81), start=89, end=96)
+ts.plot(seriesdata, xlim = c(1987, 2011))
+re <- ts(c(-1.63,0.28, 0.33, 0.66, 1.59, 0.51, 0.71, 0.81), start = c(2009,2), frequency = 4)
+points(forecast1, type="l", col=2)
+points(forecast1 - 1.96*se1, type="l", col=2, lty=2)
+points(forecast1 + 1.96*se1, type="l", col=2, lty=2)
+points(re, type="l", col=3)
+```
+```{r}
+
+ts.plot(seriesdata, xlim = c(2005, 2011))
+re <- ts(c(-1.63,0.28, 0.33, 0.66, 1.59, 0.51, 0.71, 0.81), start = c(2009,2), frequency = 4)
 points(forecast1, type="l", col=2)
 points(forecast1 - 1.96*se1, type="l", col=2, lty=2)
 points(forecast1 + 1.96*se1, type="l", col=2, lty=2)
@@ -129,12 +148,9 @@ points(re, type="l", col=3)
 
 8.) Repeat question 2 above, but this time using a 10% significance level for the generalto-specific modeling approach. Use the newly estimated model to produce a 2-year (8 quarters) point forecast of the Dutch GDP quarterly growth rate. Comment on the accuracy of the forecast generated by the newly estimated AR model. Is it better than the model you estimated before?
 ```{r}
-ts.plot(data$GDP_QGR)
-forecast1 <- predict(ar1, n.ahead=8)$pred
-se1 <- predict(ar1, n.ahead=8)$se
-forecast3 <- predict(ar3, n.ahead=8)$pred
-se3 <- predict(ar3, n.ahead=8)$se
-re <- ts(c(-1.63,0.28, 0.33, 0.66, 1.59, 0.51, 0.71, 0.81), start=89, end=96)
+ts.plot(seriesdata, xlim = c(1987,2011))
+forecast3 <- ts(predict(ar3, n.ahead=8)$pred, start = c(2009,2), frequency = 4)
+se3 <- ts(predict(ar3, n.ahead=8)$se, start = c(2009,2), frequency = 4)
 points(forecast1, type="l", col=2)
 points(forecast1 - 1.96*se1, type="l", col=2, lty=2)
 points(forecast1 + 1.96*se1, type="l", col=2, lty=2)
@@ -143,6 +159,19 @@ points(forecast3 - 1.96*se3, type="l", col=4, lty=2)
 points(forecast3 + 1.96*se3, type="l", col=4, lty=2)
 points(re, type="l", col=3)
 ```
+```{r}
+ts.plot(seriesdata, xlim = c(2005,2011))
+forecast3 <- ts(predict(ar3, n.ahead=8)$pred, start = c(2009,2), frequency = 4)
+se3 <- ts(predict(ar3, n.ahead=8)$se, start = c(2009,2), frequency = 4)
+points(forecast1, type="l", col=2)
+points(forecast1 - 1.96*se1, type="l", col=2, lty=2)
+points(forecast1 + 1.96*se1, type="l", col=2, lty=2)
+points(forecast3, type="l", col=4)
+points(forecast3 - 1.96*se3, type="l", col=4, lty=2)
+points(forecast3 + 1.96*se3, type="l", col=4, lty=2)
+points(re, type="l", col=3)
+```
+
 ```{r}
 rmse(re, forecast1)
 rmse(re, forecast3)

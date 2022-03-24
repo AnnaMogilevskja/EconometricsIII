@@ -100,8 +100,12 @@ forecast1
 ```{r}
 ts.plot(forecast1, type="l")
 ```
-We used the function predict() to forecast the next 8 quarters based on the AR(1) model. It gives us a time series of predictions, using finite-history prediction (https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/predict.Arima).
-The algorithm is based on the Kalman filter (https://www.jstor.org/stable/pdf/2347987.pdf?casa_token=YM8e7AtkQeUAAAAA:iKQiv7RxaEzEBcvzWiMcCKERAXdYmC8XT1hnKuhGYsgsr53gT48e2qJex4rkupEafCimogVYWp1sLz9KmYjUiH-nVpbYCgoiOfnbVC-k4UypJenakvI). 
+Plugging the available data into the forcasted model is the basics approach that is conducted to obtain forecasted values. However, there are various methods to improve the forecast. 
+
+We used the function \textit{predict()} to forecast the next 8 quarters based on the AR(1) model. It gives us a time series of predictions, using finite-history prediction via the Kalman filter. Note it is only statistically significant if the MA part is stationary (as an AR model does not have a MA part, this is not an issue for us). 
+
+The Kalman Filter is basically an iterative process that entails two phases. In the first phase, the filter produces estimations of the current state variables. In the second phase, the estimates are weighted with weighted averages. The higher the certainty of the estimation, the higher the weight. The filter also is often used for DSGE models. 
+ 
 
 5.)  Suppose that the innovations in your AR model are iid Gaussian. Produce 95% confidence intervals for your 2-year forecast. Furthermore, comment on the following statement issued by government officials: “Given the available GDP data, we believe that there is a low probability that the Dutch GDP growth rate will remain negative in the second quarter of 2009.”
 
@@ -413,17 +417,20 @@ pnorm(7.8, mean = UN_RATE[109], sd = fe1)
 ```{r}
 jarque.bera.test(adl3_1$residuals)
 ```
+If the iid Gaussian assumption holds, then we have a joint normal distribution. Hence, we conduct a Jarque Bera Test to test for normality (the $H_0$ is that the residuals are normaly distributed). As the resulting p-value is belov $5\%$, we reject the $H_0$. This is why we conclude that we cannot trust the iid Gaussia assumption. 
+
 
 5) Make use of your estimated AR and ADL models to produce a 2-year (8 quarter) forecast for the Unemployment rate that spans until the first quarter of 2016. Report the obtained values.
-
-```{r}
-UN$test
-```
 
 
 ```{r}
 UN_RATE <- ts(UN_RATE, start = c(1987, 2), frequency = 4)
 UN <- ts_split(UN_RATE, sample.out = h)
+```
+
+```{r}
+"The obtained values are:"
+UN$test
 ```
 
 

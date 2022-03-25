@@ -1,7 +1,7 @@
 ---
-title: "Econometrics II - Assignment 5"
+title: "Econometrics III - Assignment 1"
 author: "The Explosive Invertibles"
-date: "13 Mar 2022"
+date: "25 Mar 2022"
 output:
   pdf_document:
     includes:
@@ -87,7 +87,7 @@ As only the estimator of the first lag has a significant effect (which can be ob
 ```{r}
 checkresiduals(ar1)
 ```
-There is no autocorrelation between the regression residuals of the estimated AR(1) model. Therefore, the model seems to be well specified. 
+Looking at the plot of the estimated residual ACF, there there does not seem to be any autocorrelation between the regression residuals of the estimated AR(1) model. Therefore, the model seems to be well specified. 
 
 4.) Make use of your estimated AR model to produce a 2-year (8 quarters) forecast for the Dutch GDP quarterly growth rate that spans until the first quarter of 2011. Report the values you obtained and explain how you derived them.
 ```{r}
@@ -100,9 +100,16 @@ forecast1
 ```{r}
 ts.plot(forecast1, type="l")
 ```
-Plugging the available data into the forcasted model is the basics approach that is conducted to obtain forecasted values. However, there are various methods to improve the forecast. 
+Our forecast is an eight step ahead forecast:
+$$
+\hat{X}_{T+8} = E(X_{T+8}|X_1,...,X_T)
+$$
+$$
+= E(\phi^8X_T+\phi^7\epsilon_{T+1}+...+\epsilon_{T+8}|X_1,...,X_T) = \phi^8X_T
+$$
+In order to get an efficient forecast, ${X_t}$ (so the GDP growth) needs to follow an stable AR(1) process which means that $|\phi| <1$. This is the case as our estimation gives us a $\phi \approx 0.27191$. Further, we need ${\epsilon_t} \sim IID(0, \sigma_{\epsilon}^2)$.
 
-We used the function \textit{predict()} to forecast the next 8 quarters based on the AR(1) model. It gives us a time series of predictions, using finite-history prediction via the Kalman filter. Note it is only statistically significant if the MA part is stationary (as an AR model does not have a MA part, this is not an issue for us). 
+For our foreceast, we used the function \textit{predict()} to forecast the next 8 quarters based on the AR(1) model. It gives us a time series of predictions, using finite-history prediction via the Kalman filter. Note it is only statistically significant if the MA part is stationary (as an AR model does not have a MA part, this is not an issue for us). 
 
 The Kalman Filter is basically an iterative process that entails two phases. In the first phase, the filter produces estimations of the current state variables. In the second phase, the estimates are weighted with weighted averages. The higher the certainty of the estimation, the higher the weight. The filter also is often used for DSGE models. 
  
@@ -512,4 +519,4 @@ UN_RATE <- ts(UN_RATE, start = c(2013, 3), frequency = 4)
 ```{r}
 ts.plot(UN_RATE)
 ```
-
+As the plots show, although the shocks are different from each other, there is no noticeable difference between the impulse responses. The reason might be that the GDP's effect on the unemployment rate is rather low, especially in comparison to the lags of the unemployment rate. Around the year 2042, both impulse responses converge to around 4.5. However, note that based on our previous calculations, the impulse responses are expected to converge to an value of around 4.1. Unfortunately, we could not determine the reason for the difference. 

@@ -1,6 +1,6 @@
 ---
 title: "Econometrics II - Assignment 5"
-author: "Think of something new"
+author: "The Explosive Invertibles"
 date: "13 Mar 2022"
 output:
   pdf_document:
@@ -234,7 +234,7 @@ dm.test(error1, error3)
 ```
 
 
-## Question 2
+# Question 2
 
 1. Plot the sample of Dutch quarterly unemployment rates and Dutch GDP quarterly growth rates that you have at your disposal. Estimate an AR model for the GDP growth rate and an ADL model for the unemployment rate using the GDP growth rate as an exogenous explanatory variable. Please adopt a general-to-specific methodology for both models by eliminating insignificant lags. For the AR model start with four lags of GDP. For the ADL model start with four lags of each variable. Report the final estimated AR and ADL models, working at a 5% significance level. Comment on the estimated coefficients. What do these coefficients tell you about the dynamic properties of the unemployment rate and the GDP growth rate?
 
@@ -449,7 +449,7 @@ points(UN$test, type="l", col=2)
 (b) In the ‘bad scenario’ the GDP quarterly growth rate suffers a negative shock of 2%.
 Please use the last observed value of the unemployment rate and gdp growth rate as the origin of your IRFs. In particular, set the origin to -0.37% for GDP and 7.8% for the unemployment rate.
 
-# Good Scenario
+## Good Scenario
 
 ```{r}
 h = 200
@@ -482,7 +482,7 @@ ts.plot(UN_RATE)
 ```
 
 
-# Bad Scenario
+## Bad Scenario
 ```{r}
 h = 200
 GDP_QGR <- append(rep(data2$GDP_QGR[n],3), numeric(h))

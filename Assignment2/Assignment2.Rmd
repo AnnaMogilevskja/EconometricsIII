@@ -1,0 +1,112 @@
+---
+title: "Econometrics III - Assignment 2"
+author: "The Explosive Invertibles"
+date: "01 Apr 2022"
+output:
+  pdf_document:
+    includes:
+      in_header: "preamble.tex"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(forecast)
+library(TSstudio)
+library(stringr)
+library(zoo)
+library(ggplot2)
+library(tseries)
+library(stats)
+library(lmtest)
+library(Metrics)
+library(dynlm)
+library(dLagM)
+library(tsoutliers)
+```
+
+# Question 1
+
+```{r}
+# Load data
+data <- read.csv("data_assign_p3.csv")
+```
+
+
+
+```{r}
+set.seed(1)
+t <- 200
+n <- 100
+
+# Create an empty array to hold our time series
+x = numeric(size)
+simulation <- list()
+# Create the first value
+x[1] <- rnorm(n = 1, mean = 0, sd = 1)
+
+for (i in 1:n) {
+  for (j in 2:t) {
+      # Create random noise for this observation
+      w.error = rnorm(n = 1, mean = 0, sd = 1)
+      # Compute the current value based on the previous value and the current noise
+      x[j] <- x[j - 1] + w.error
+  }
+  simulation[i] <- x
+}
+# statt Liste, Matrizen
+```
+2. Provide plots for two stock market time-series at your choice and report 12-period ACF
+and PACF functions for those two time series. What does the sample ACF tell you about
+the dynamic properties of these stocks?
+```{r}
+data$DATE<- as.Date(data$DATE, format = "%d/%m/%Y")
+```
+
+```{r}
+ggplot(data, aes(x = DATE, y = NETFLIX)) + 
+  geom_line() 
+```
+```{r}
+ggplot(data, aes(x = DATE, y = APPLE)) + 
+  geom_line() 
+```
+
+```{r}
+Acf(
+  data$NETFLIX,
+  lag.max = 12
+)
+```
+
+```{r}
+Pacf(
+  data$NETFLIX,
+  lag.max = 12
+)
+```
+```{r}
+Acf(
+  data$APPLE,
+  lag.max = 12
+)
+```
+
+```{r}
+Pacf(
+  data$APPLE,
+  lag.max = 12
+)
+```
+
+DON'T FORGET TO TALK ABOUT CONFIDENCE INTERVALS!
+
+3. Perform an ADF unit-root test for all the 10 time series using the general-to-specific
+approach based on the Schwarz Information Criterion (SIC). Report the values of the
+ADF test statistics. Is the unit-root hypothesis rejected for any time-series at the 90%
+confidence level? Did you expect to reject the unit-root hypothesis for some time-series at
+this confidence level? Justify your answer carefully.
+
+```{r}
+netflix <- auto.arima(data$NETFLIX, d = 0, D = 0, max.p = 5, max.q = 5, ic = "aic")
+```
+

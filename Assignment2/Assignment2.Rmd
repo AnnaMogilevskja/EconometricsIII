@@ -7,6 +7,9 @@ output:
     includes:
       in_header: "preamble.tex"
 ---
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -33,28 +36,48 @@ data <- read.csv("data_assign_p3.csv")
 
 
 
+
 ```{r}
-set.seed(1)
-t <- 200
-n <- 100
+set.seed(20)
+t = 100
+n = 10000
 
-# Create an empty array to hold our time series
-x = numeric(size)
-simulation <- list()
+sigma_u = 1
+sigma_v = 1
+
 # Create the first value
-x[1] <- rnorm(n = 1, mean = 0, sd = 1)
+x <- data.frame(rnorm(n,0,sigma_v))
+y <- data.frame(rnorm(n,0,sigma_u))
 
-for (i in 1:n) {
-  for (j in 2:t) {
-      # Create random noise for this observation
-      w.error = rnorm(n = 1, mean = 0, sd = 1)
-      # Compute the current value based on the previous value and the current noise
-      x[j] <- x[j - 1] + w.error
-  }
-  simulation[i] <- x
+# Generate Random walk
+for (i in 1:(t-1)){
+v <- as.numeric(x[i,]) + rnorm(n,0,sigma_v)
+x <- data.frame(x, v)
+
+u <- as.numeric(y[i,]) + rnorm(n,0,sigma_u)
+y <- data.frame(y, v)
 }
-# statt Liste, Matrizen
+
+# Run regressions & store beta, SE and R^2
+est <- matrix(,nrow = n, ncol =3)
+
+for (i in 1:n){
+  reg <- summary(lm(as.numeric(y[i,])~ as.numeric(x[i,])))
+  est[i,1] <- reg$coef[2,1]
+  est[i,2] <- reg$coef[2,2]
+  est[i,3] <- reg$r.squared
+}
+
 ```
+
+```{r}
+# Plot histograms
+plot(density(est[,1])$x,density(est[,1])$y,type="l",xlab="Distribution of estimated betas",ylab="Density")
+plot(density(est[,2])$x,density(est[,2])$y,type="l",xlab="Distribution of estimated S.E.",ylab="Density")
+plot(density(est[,3])$x,density(est[,3])$y,type="l",xlab="Distribution of R^2",ylab="Density")
+```
+
+
 2. Provide plots for two stock market time-series at your choice and report 12-period ACF
 and PACF functions for those two time series. What does the sample ACF tell you about
 the dynamic properties of these stocks?
@@ -110,3 +133,46 @@ this confidence level? Justify your answer carefully.
 netflix <- auto.arima(data$NETFLIX, d = 0, D = 0, max.p = 5, max.q = 5, ic = "aic")
 ```
 
+
+# Question 2
+```{r}
+set.seed(20)
+t = 100
+n = 10000
+
+sigma_u = 1
+sigma_v = 1
+
+gamma = 1.5
+
+# Create the first value
+x <- data.frame(rnorm(n,0,sigma_v))
+y <- data.frame(rnorm(n,0,sigma_u))
+
+# Generate Random walk
+for (i in 1:(t-1)){
+v <- as.numeric(x[i,]) + rnorm(n,0,sigma_v)
+x <- data.frame(x, v)
+
+u <- as.numeric(x[(i+1),]) + gamma * rnorm(n,0,sigma_u)
+y <- data.frame(y, v)
+}
+
+# Run regressions & store beta, SE and R^2
+est <- matrix(,nrow = n, ncol =3)
+
+for (i in 1:n){
+  reg <- summary(lm(as.numeric(y[i,])~ as.numeric(x[i,])))
+  est[i,1] <- reg$coef[2,1]
+  est[i,2] <- reg$coef[2,2]
+  est[i,3] <- reg$r.squared
+}
+
+```
+
+```{r}
+# Plot histograms
+plot(density(est[,1])$x,density(est[,1])$y,type="l",xlab="Distribution of estimated betas",ylab="Density")
+plot(density(est[,2])$x,density(est[,2])$y,type="l",xlab="Distribution of estimated S.E.",ylab="Density")
+plot(density(est[,3])$x,density(est[,3])$y,type="l",xlab="Distribution of R^2",ylab="Density")
+```

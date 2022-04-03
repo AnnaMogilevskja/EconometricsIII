@@ -25,6 +25,8 @@ library(Metrics)
 library(dynlm)
 library(dLagM)
 library(tsoutliers)
+library(DescTools)
+library(naniar)
 ```
 
 # Question 1
@@ -38,7 +40,7 @@ data <- read.csv("data_assign_p3.csv")
 
 
 ```{r}
-set.seed(20)
+set.seed(1)
 t = 100
 n = 10000
 
@@ -55,7 +57,7 @@ v <- as.numeric(x[i,]) + rnorm(n,0,sigma_v)
 x <- data.frame(x, v)
 
 u <- as.numeric(y[i,]) + rnorm(n,0,sigma_u)
-y <- data.frame(y, v)
+y <- data.frame(y, u)
 }
 
 # Run regressions & store beta, SE and R^2
@@ -130,9 +132,174 @@ confidence level? Did you expect to reject the unit-root hypothesis for some tim
 this confidence level? Justify your answer carefully.
 
 ```{r}
-netflix <- auto.arima(data$NETFLIX, d = 0, D = 0, max.p = 5, max.q = 5, ic = "aic")
+# Set combinatorics where 1 last lag is intercept
+
+max_lag = 6
+lag <- c(1:max_lag)
+comb_set <- CombSet(lag, m=1:max_lag)
+comb = 0
+for (i in 1:max_lag){
+  comb = comb + CombN(max_lag,i)
+}
+lag_struc <- matrix(0,nrow = comb, ncol =max_lag)
+lag_max <- rep(0, comb)
+
+# Lag 1
+lag_n = 1
+for (i in 1:length(comb_set[[lag_n]])){
+  lag = comb_set[[lag_n]][i]
+  lag_struc[i,lag] = NA
+}
+
+# Lag 2 and higher
+start = 0
+for (n in 2:max_lag){
+  lag_n = n
+  start = start + length(comb_set[[lag_n-1]][,1])
+  for (i in 1:length(comb_set[[lag_n]][,1])){
+    for (j in 1:lag_n){
+      lag = comb_set[[lag_n]][i,j]
+      lag_struc[start + i,lag] = NA
+    }
+  }
+}
+
+# Delete model with only intercept
+lag_struc <- lag_struc[-max_lag,]
+comb = comb -1
 ```
 
+```{r}
+# Estimate all models and pick specification with highest AIC - APPLE
+ts <- data$APPLE
+aics <- rep(0, comb)
+
+for (i in 1:comb){
+  logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
+  k = sum(is.na(lag_struc[i,]))
+  aics[i] = 2*k - 2*logl
+}
+max(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+```
+```{r}
+# Estimate all models and pick specification with highest AIC - EXXON_MOBIL
+ts <- data$EXXON_MOBIL
+aics <- rep(0, comb)
+
+for (i in 1:comb){
+  logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
+  k = sum(is.na(lag_struc[i,]))
+  aics[i] = 2*k - 2*logl
+}
+max(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+```
+```{r}
+# Estimate all models and pick specification with highest AIC - FORD
+ts <- data$FORD
+aics <- rep(0, comb)
+
+for (i in 1:comb){
+  logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
+  k = sum(is.na(lag_struc[i,]))
+  aics[i] = 2*k - 2*logl
+}
+max(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+```
+```{r}
+# Estimate all models and pick specification with highest AIC - GEN_ELECTRIC
+ts <- data$GEN_ELECTRIC
+aics <- rep(0, comb)
+
+for (i in 1:comb){
+  logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
+  k = sum(is.na(lag_struc[i,]))
+  aics[i] = 2*k - 2*logl
+}
+max(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+```
+```{r}
+# Estimate all models and pick specification with highest AIC - INTEL
+ts <- data$INTEL
+aics <- rep(0, comb)
+
+for (i in 1:comb){
+  logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
+  k = sum(is.na(lag_struc[i,]))
+  aics[i] = 2*k - 2*logl
+}
+max(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+```
+```{r}
+# Estimate all models and pick specification with highest AIC - MICROSOFT
+ts <- data$MICROSOFT
+aics <- rep(0, comb)
+
+for (i in 1:comb){
+  logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
+  k = sum(is.na(lag_struc[i,]))
+  aics[i] = 2*k - 2*logl
+}
+max(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+```
+
+```{r}
+# Estimate all models and pick specification with highest AIC - NETFLIX
+ts <- data$NETFLIX
+aics <- rep(0, comb)
+
+for (i in 1:comb){
+  logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
+  k = sum(is.na(lag_struc[i,]))
+  aics[i] = 2*k - 2*logl
+}
+max(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+```
+```{r}
+# Estimate all models and pick specification with highest AIC - NOKIA
+ts <- data$NOKIA
+aics <- rep(0, comb)
+
+for (i in 1:comb){
+  logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
+  k = sum(is.na(lag_struc[i,]))
+  aics[i] = 2*k - 2*logl
+}
+max(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+```
+```{r}
+# Estimate all models and pick specification with highest AIC - SP500
+ts <- data$SP500
+aics <- rep(0, comb)
+
+for (i in 1:comb){
+  logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
+  k = sum(is.na(lag_struc[i,]))
+  aics[i] = 2*k - 2*logl
+}
+max(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+```
+```{r}
+# Estimate all models and pick specification with highest AIC - YAHOO
+ts <- data$YAHOO
+aics <- rep(0, comb)
+
+for (i in 1:comb){
+  logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
+  k = sum(is.na(lag_struc[i,]))
+  aics[i] = 2*k - 2*logl
+}
+max(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+```
 
 # Question 2
 ```{r}
@@ -143,7 +310,8 @@ n = 10000
 sigma_u = 1
 sigma_v = 1
 
-gamma = 1.5
+gamma = 0.8
+phi = 1
 
 # Create the first value
 x <- data.frame(rnorm(n,0,sigma_v))
@@ -151,11 +319,11 @@ y <- data.frame(rnorm(n,0,sigma_u))
 
 # Generate Random walk
 for (i in 1:(t-1)){
-v <- as.numeric(x[i,]) + rnorm(n,0,sigma_v)
+v <- as.numeric(x[i,]) + phi * rnorm(n,0,sigma_v)
 x <- data.frame(x, v)
 
 u <- as.numeric(x[(i+1),]) + gamma * rnorm(n,0,sigma_u)
-y <- data.frame(y, v)
+y <- data.frame(y, u)
 }
 
 # Run regressions & store beta, SE and R^2

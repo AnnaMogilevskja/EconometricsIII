@@ -170,7 +170,7 @@ comb = comb -1
 ```
 
 ```{r}
-# Estimate all models and pick specification with highest AIC - APPLE
+# Estimate all models and pick specification with lowest AIC - APPLE
 ts <- data$APPLE
 aics <- rep(0, comb)
 
@@ -179,11 +179,11 @@ for (i in 1:comb){
   k = sum(is.na(lag_struc[i,]))
   aics[i] = 2*k - 2*logl
 }
-max(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+min(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
 ```
 ```{r}
-# Estimate all models and pick specification with highest AIC - EXXON_MOBIL
+# Estimate all models and pick specification with lowest AIC - EXXON_MOBIL
 ts <- data$EXXON_MOBIL
 aics <- rep(0, comb)
 
@@ -192,11 +192,11 @@ for (i in 1:comb){
   k = sum(is.na(lag_struc[i,]))
   aics[i] = 2*k - 2*logl
 }
-max(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+min(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
 ```
 ```{r}
-# Estimate all models and pick specification with highest AIC - FORD
+# Estimate all models and pick specification with lowest AIC - FORD
 ts <- data$FORD
 aics <- rep(0, comb)
 
@@ -205,11 +205,11 @@ for (i in 1:comb){
   k = sum(is.na(lag_struc[i,]))
   aics[i] = 2*k - 2*logl
 }
-max(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+min(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
 ```
 ```{r}
-# Estimate all models and pick specification with highest AIC - GEN_ELECTRIC
+# Estimate all models and pick specification with lowest AIC - GEN_ELECTRIC
 ts <- data$GEN_ELECTRIC
 aics <- rep(0, comb)
 
@@ -218,11 +218,12 @@ for (i in 1:comb){
   k = sum(is.na(lag_struc[i,]))
   aics[i] = 2*k - 2*logl
 }
-max(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+min(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
 ```
+
 ```{r}
-# Estimate all models and pick specification with highest AIC - INTEL
+# Estimate all models and pick specification with lowest AIC - INTEL
 ts <- data$INTEL
 aics <- rep(0, comb)
 
@@ -231,8 +232,8 @@ for (i in 1:comb){
   k = sum(is.na(lag_struc[i,]))
   aics[i] = 2*k - 2*logl
 }
-max(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+min(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
 ```
 ```{r}
 # Estimate all models and pick specification with highest AIC - MICROSOFT
@@ -244,8 +245,8 @@ for (i in 1:comb){
   k = sum(is.na(lag_struc[i,]))
   aics[i] = 2*k - 2*logl
 }
-max(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+min(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
 ```
 
 ```{r}
@@ -258,8 +259,8 @@ for (i in 1:comb){
   k = sum(is.na(lag_struc[i,]))
   aics[i] = 2*k - 2*logl
 }
-max(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+min(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
 ```
 ```{r}
 # Estimate all models and pick specification with highest AIC - NOKIA
@@ -271,8 +272,8 @@ for (i in 1:comb){
   k = sum(is.na(lag_struc[i,]))
   aics[i] = 2*k - 2*logl
 }
-max(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+min(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
 ```
 ```{r}
 # Estimate all models and pick specification with highest AIC - SP500
@@ -284,8 +285,8 @@ for (i in 1:comb){
   k = sum(is.na(lag_struc[i,]))
   aics[i] = 2*k - 2*logl
 }
-max(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+min(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
 ```
 ```{r}
 # Estimate all models and pick specification with highest AIC - YAHOO
@@ -297,8 +298,8 @@ for (i in 1:comb){
   k = sum(is.na(lag_struc[i,]))
   aics[i] = 2*k - 2*logl
 }
-max(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.max(aics),], method ="CSS")
+min(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
 ```
 
 # Question 2

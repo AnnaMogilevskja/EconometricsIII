@@ -27,6 +27,7 @@ library(dLagM)
 library(tsoutliers)
 library(DescTools)
 library(naniar)
+library(tseries)
 ```
 
 # Question 1
@@ -181,6 +182,33 @@ for (i in 1:comb){
 }
 min(aics)
 arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+
+# Perform ADF Test
+ts <- ts(ts)
+struc <- c(0)
+for (i in 1:length(lag_struc[which.min(aics),]-1)){
+  if (is.na(lag_struc[which.min(aics),i])){
+    struc <- cbind(struc, i)
+  } 
+}
+struc <- as.numeric(struc[,-1])
+if(is.na(lag_struc[which.min(aics),i])){
+  int = TRUE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
+} else{
+  int = FALSE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc)-1)
+}
+beta = summary(mod)$coefficients[1,1]
+se = summary(mod)$coefficients[1,2]
+adf = beta/se
+adf
+
+if(int==TRUE){
+  adf< (-1.616)
+}else{
+  adf< (-2.568)
+}
 ```
 ```{r}
 # Estimate all models and pick specification with lowest AIC - EXXON_MOBIL
@@ -194,7 +222,35 @@ for (i in 1:comb){
 }
 min(aics)
 arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+
+# Perform ADF Test
+ts <- ts(ts)
+struc <- c(0)
+for (i in 1:length(lag_struc[which.min(aics),]-1)){
+  if (is.na(lag_struc[which.min(aics),i])){
+    struc <- cbind(struc, i)
+  } 
+}
+struc <- as.numeric(struc[,-1])
+if(is.na(lag_struc[which.min(aics),i])){
+  int = TRUE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
+} else{
+  int = FALSE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc)-1)
+}
+beta = summary(mod)$coefficients[1,1]
+se = summary(mod)$coefficients[1,2]
+adf = beta / se
+adf
+
+if(int==TRUE){
+  adf< (-1.616)
+}else{
+  adf< (-2.568)
+}
 ```
+
 ```{r}
 # Estimate all models and pick specification with lowest AIC - FORD
 ts <- data$FORD
@@ -207,7 +263,35 @@ for (i in 1:comb){
 }
 min(aics)
 arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+
+# Perform ADF Test
+ts <- ts(ts)
+struc <- c(0)
+for (i in 1:length(lag_struc[which.min(aics),]-1)){
+  if (is.na(lag_struc[which.min(aics),i])){
+    struc <- cbind(struc, i)
+  } 
+}
+struc <- as.numeric(struc[,-1])
+if(is.na(lag_struc[which.min(aics),i])){
+  int = TRUE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
+} else{
+  int = FALSE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc)-1)
+}
+beta = summary(mod)$coefficients[1,1]
+se = summary(mod)$coefficients[1,2]
+adf = beta / se
+adf
+
+if(int==TRUE){
+  adf< (-1.616)
+}else{
+  adf< (-2.568)
+}
 ```
+
 ```{r}
 # Estimate all models and pick specification with lowest AIC - GEN_ELECTRIC
 ts <- data$GEN_ELECTRIC
@@ -220,6 +304,33 @@ for (i in 1:comb){
 }
 min(aics)
 arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+
+# Perform ADF Test
+ts <- ts(ts)
+struc <- c(0)
+for (i in 1:length(lag_struc[which.min(aics),]-1)){
+  if (is.na(lag_struc[which.min(aics),i])){
+    struc <- cbind(struc, i)
+  } 
+}
+struc <- as.numeric(struc[,-1])
+if(is.na(lag_struc[which.min(aics),i])){
+  int = TRUE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
+} else{
+  int = FALSE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc)-1)
+}
+beta = summary(mod)$coefficients[1,1]
+se = summary(mod)$coefficients[1,2]
+adf = beta / se
+adf
+
+if(int==TRUE){
+  adf< (-1.616)
+}else{
+  adf< (-2.568)
+}
 ```
 
 ```{r}
@@ -234,7 +345,35 @@ for (i in 1:comb){
 }
 min(aics)
 arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+
+# Perform ADF Test
+ts <- ts(ts)
+struc <- c(0)
+for (i in 1:length(lag_struc[which.min(aics),]-1)){
+  if (is.na(lag_struc[which.min(aics),i])){
+    struc <- cbind(struc, i)
+  } 
+}
+struc <- as.numeric(struc[,-1])
+if(is.na(lag_struc[which.min(aics),i])){
+  int = TRUE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
+} else{
+  int = FALSE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc)-1)
+}
+beta = summary(mod)$coefficients[1,1]
+se = summary(mod)$coefficients[1,2]
+adf = beta / se
+adf
+
+if(int==TRUE){
+  adf< (-1.616)
+}else{
+  adf< (-2.568)
+}
 ```
+
 ```{r}
 # Estimate all models and pick specification with highest AIC - MICROSOFT
 ts <- data$MICROSOFT
@@ -247,6 +386,33 @@ for (i in 1:comb){
 }
 min(aics)
 arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+
+# Perform ADF Test
+ts <- ts(ts)
+struc <- c(0)
+for (i in 1:length(lag_struc[which.min(aics),]-1)){
+  if (is.na(lag_struc[which.min(aics),i])){
+    struc <- cbind(struc, i)
+  } 
+}
+struc <- as.numeric(struc[,-1])
+if(is.na(lag_struc[which.min(aics),i])){
+  int = TRUE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
+} else{
+  int = FALSE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc)-1)
+}
+beta = summary(mod)$coefficients[1,1]
+se = summary(mod)$coefficients[1,2]
+adf = beta / se
+adf
+
+if(int==TRUE){
+  adf< (-1.616)
+}else{
+  adf< (-2.568)
+}
 ```
 
 ```{r}
@@ -261,7 +427,35 @@ for (i in 1:comb){
 }
 min(aics)
 arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+
+# Perform ADF Test
+ts <- ts(ts)
+struc <- c(0)
+for (i in 1:length(lag_struc[which.min(aics),]-1)){
+  if (is.na(lag_struc[which.min(aics),i])){
+    struc <- cbind(struc, i)
+  } 
+}
+struc <- as.numeric(struc[,-1])
+if(is.na(lag_struc[which.min(aics),i])){
+  int = TRUE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
+} else{
+  int = FALSE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc)-1)
+}
+beta = summary(mod)$coefficients[1,1]
+se = summary(mod)$coefficients[1,2]
+adf = beta / se
+adf
+
+if(int==TRUE){
+  adf< (-1.616)
+}else{
+  adf< (-2.568)
+}
 ```
+
 ```{r}
 # Estimate all models and pick specification with highest AIC - NOKIA
 ts <- data$NOKIA
@@ -274,7 +468,35 @@ for (i in 1:comb){
 }
 min(aics)
 arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+
+# Perform ADF Test
+ts <- ts(ts)
+struc <- c(0)
+for (i in 1:length(lag_struc[which.min(aics),]-1)){
+  if (is.na(lag_struc[which.min(aics),i])){
+    struc <- cbind(struc, i)
+  } 
+}
+struc <- as.numeric(struc[,-1])
+if(is.na(lag_struc[which.min(aics),i])){
+  int = TRUE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
+} else{
+  int = FALSE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc)-1)
+}
+beta = summary(mod)$coefficients[1,1]
+se = summary(mod)$coefficients[1,2]
+adf = beta / se
+adf
+
+if(int==TRUE){
+  adf< (-1.616)
+}else{
+  adf< (-2.568)
+}
 ```
+
 ```{r}
 # Estimate all models and pick specification with highest AIC - SP500
 ts <- data$SP500
@@ -287,7 +509,35 @@ for (i in 1:comb){
 }
 min(aics)
 arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+
+# Perform ADF Test
+ts <- ts(ts)
+struc <- c(0)
+for (i in 1:length(lag_struc[which.min(aics),]-1)){
+  if (is.na(lag_struc[which.min(aics),i])){
+    struc <- cbind(struc, i)
+  } 
+}
+struc <- as.numeric(struc[,-1])
+if(is.na(lag_struc[which.min(aics),i])){
+  int = TRUE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
+} else{
+  int = FALSE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc)-1)
+}
+beta = summary(mod)$coefficients[1,1]
+se = summary(mod)$coefficients[1,2]
+adf = beta / se
+adf
+
+if(int==TRUE){
+  adf< (-1.616)
+}else{
+  adf< (-2.568)
+}
 ```
+
 ```{r}
 # Estimate all models and pick specification with highest AIC - YAHOO
 ts <- data$YAHOO
@@ -300,9 +550,81 @@ for (i in 1:comb){
 }
 min(aics)
 arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+
+# Perform ADF Test
+ts <- ts(ts)
+struc <- c(0)
+for (i in 1:length(lag_struc[which.min(aics),]-1)){
+  if (is.na(lag_struc[which.min(aics),i])){
+    struc <- cbind(struc, i)
+  } 
+}
+struc <- as.numeric(struc[,-1])
+if(is.na(lag_struc[which.min(aics),i])){
+  int = TRUE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
+} else{
+  int = FALSE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc)-1)
+}
+beta = summary(mod)$coefficients[1,1]
+se = summary(mod)$coefficients[1,2]
+adf = beta / se
+adf
+
+if(int==TRUE){
+  adf< (-1.616)
+}else{
+  adf< (-2.568)
+}
+```
+4. Assume that both the stocks of Apple and Microsoft follow a random walk process. Produce
+a 5-day forecast for the stocks of Apple and Microsoft. Add 95% confidence bounds to your
+forecasts under the assumption of Gaussian innovations. Is there any investment advice
+you can give on these stocks? Is their value expected to increase or decrease?
+
+```{r}
+# Estimate sigma for APPLE & MICROSOFT
+sigma_aapl = sum(diff(data$APPLE)^2) / (length(diff(data$APPLE)))
+sigma_msft = sum(diff(data$MICROSOFT)^2) / (length(diff(data$MICROSOFT)))
+
+# Store last h observations for each stock price
+t = 20
+hist_aapl <- tail(data$APPLE,t)
+hist_msft <- tail(data$MICROSOFT,t)
+
+# Produce forecast
+h = 5
+forecast_aapl <-  rep( tail(data$APPLE,1),h)
+forecast_msft <- rep( tail(data$MICROSOFT,1),h)
+forecast_aapl <-  ts(forecast_aapl, start = t+1)
+forecast_msft <- ts(forecast_msft, start = t+1)
 ```
 
-# Question 2
+```{r}
+# Generate plot APPLE
+ts.plot(forecast_aapl)
+points(forecast_aapl - 1.96*sqrt(sigma_aapl), type="l", col=2, lty=2)
+points(forecast_aapl + 1.96*sqrt(sigma_aapl), type="l", col=2, lty=2)
+```
+```{r}
+# Generate plot MICROSOFT
+ts.plot(forecast_msft)
+points(forecast_msft - 1.96*sqrt(sigma_msft), type="l", col=2, lty=2)
+points(forecast_msft + 1.96*sqrt(sigma_msft), type="l", col=2, lty=2)
+```
+5. Do you find a statistically significant contemporaneous relation between Microsoft and
+Exxon Mobile stock prices? Do you agree that changes in Microsoft stock prices are
+largely explained by fluctuations in the stock price of Exxon Mobile? Justify your answer.
+
+```{r}
+mod <- lm(data$APPLE ~ data$EXXON_MOBIL)
+summary(mod)
+```
+SPURIOUS REGRESSION..
+
+
+## Question 2
 ```{r}
 set.seed(20)
 t = 100

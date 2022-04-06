@@ -190,6 +190,7 @@ for (i in 1:length(lag_struc[which.min(aics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
+struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(aics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -208,6 +209,7 @@ if(int==TRUE){
   adf< (-2.568)
 }
 ```
+
 ```{r}
 # Estimate all models and pick specification with lowest AIC - EXXON_MOBIL
 ts <- data$EXXON_MOBIL
@@ -230,6 +232,7 @@ for (i in 1:length(lag_struc[which.min(aics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
+struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(aics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -271,6 +274,7 @@ for (i in 1:length(lag_struc[which.min(aics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
+struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(aics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -312,6 +316,7 @@ for (i in 1:length(lag_struc[which.min(aics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
+struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(aics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -353,6 +358,7 @@ for (i in 1:length(lag_struc[which.min(aics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
+struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(aics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -394,6 +400,7 @@ for (i in 1:length(lag_struc[which.min(aics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
+struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(aics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -435,6 +442,7 @@ for (i in 1:length(lag_struc[which.min(aics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
+struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(aics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -476,6 +484,7 @@ for (i in 1:length(lag_struc[which.min(aics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
+struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(aics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -517,6 +526,7 @@ for (i in 1:length(lag_struc[which.min(aics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
+struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(aics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -558,6 +568,7 @@ for (i in 1:length(lag_struc[which.min(aics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
+struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(aics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))

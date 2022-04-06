@@ -26,6 +26,7 @@ library(tsoutliers)
 library(DescTools)
 library(naniar)
 library(tseries)
+library(dplyr)
 ```
 
 # Question 1
@@ -132,7 +133,6 @@ this confidence level? Justify your answer carefully.
 
 ```{r}
 # Set combinatorics where 1 last lag is intercept
-
 max_lag = 6
 lag <- c(1:max_lag)
 comb_set <- CombSet(lag, m=1:max_lag)
@@ -634,9 +634,14 @@ SPURIOUS REGRESSION..
 
 
 ## Question 2
+
+1. Show that the spurious regression problem does not occur when two I(1) variables are
+cointegrated using a Monte Carlo simulation study. Furthermore, analyze the claim of
+superconsistency of the estimator of the static cointegrating regression. 
+
 ```{r}
 set.seed(20)
-t = 100
+l = c(50, 100)
 n = 10000
 
 sigma_u = 1
@@ -645,27 +650,87 @@ sigma_v = 1
 gamma = 0.8
 phi = 1
 
-# Create the first value
-x <- data.frame(rnorm(n,0,sigma_v))
-y <- data.frame(rnorm(n,0,sigma_u))
+# Create the list to store dataframes
+simulationsX <- list()
+simulationsY <- list()
+
 
 # Generate Random walk
-for (i in 1:(t-1)){
-v <- as.numeric(x[i,]) + phi * rnorm(n,0,sigma_v)
-x <- data.frame(x, v)
-
-u <- as.numeric(x[(i+1),]) + gamma * rnorm(n,0,sigma_u)
-y <- data.frame(y, u)
+for (j in 1:length(l)){
+  t = l[j]
+  x <- data.frame(rnorm(n,0,sigma_v))
+  y <- data.frame(rnorm(n,0,sigma_u))
+  for (i in 1:(t-1)){
+    v <- as.numeric(x[i,]) + phi * rnorm(n,0,sigma_v)
+    x <- data.frame(x, v)
+    
+    u <- as.numeric(x[(i+1),]) + gamma * rnorm(n,0,sigma_u)
+    y <- data.frame(y, u)
+  }
+  simulationsX[j] <- list(data.frame(x))
+  simulationsY[j] <- list(data.frame(y))
 }
 
 # Run regressions & store beta, SE and R^2
-est <- matrix(,nrow = n, ncol =3)
+list_est <- list()
 
-for (i in 1:n){
-  reg <- summary(lm(as.numeric(y[i,])~ as.numeric(x[i,])))
-  est[i,1] <- reg$coef[2,1]
-  est[i,2] <- reg$coef[2,2]
-  est[i,3] <- reg$r.squared
+for (j in 1:length(l)){
+  est <- data.frame(matrix(ncol = 3, nrow = n))
+  for (i in 1:n){
+    reg <- summary(lm(as.numeric(simulationsY[[j]][i,])~ as.numeric(simulationsX[[j]][i,])))
+    est[i,1] <- reg$coef[2,1]
+    est[i,2] <- reg$coef[2,2]
+    est[i,3] <- reg$r.squared
+  }
+  list_est[j] <- list(data.frame(est))
+}
+
+```
+
+```{r}
+set.seed(20)
+l = c(50, 100)
+n = 10000
+
+sigma_u = 1
+sigma_v = 1
+
+gamma = 0.8
+phi = 0.8
+
+# Create the list to store dataframes
+simulationsX_2 <- list()
+simulationsY_2 <- list()
+
+
+# Generate Random walk
+for (j in 1:length(l)){
+  t = l[j]
+  x <- data.frame(rnorm(n,0,sigma_v))
+  y <- data.frame(rnorm(n,0,sigma_u))
+  for (i in 1:(t-1)){
+    v <- as.numeric(x[i,]) + phi * rnorm(n,0,sigma_v)
+    x <- data.frame(x, v)
+    
+    u <- as.numeric(x[(i+1),]) + gamma * rnorm(n,0,sigma_u)
+    y <- data.frame(y, u)
+  }
+  simulationsX_2[j] <- list(data.frame(x))
+  simulationsY_2[j] <- list(data.frame(y))
+}
+
+# Run regressions & store beta, SE and R^2
+list2_est <- list()
+
+for (j in 1:length(l)){
+  est <- data.frame(matrix(ncol = 3, nrow = n))
+  for (i in 1:n){
+    reg <- summary(lm(as.numeric(simulationsY_2[[j]][i,])~ as.numeric(simulationsX_2[[j]][i,])))
+    est[i,1] <- reg$coef[2,1]
+    est[i,2] <- reg$coef[2,2]
+    est[i,3] <- reg$r.squared
+  }
+  list2_est[j] <- list(data.frame(est))
 }
 
 ```
@@ -676,3 +741,342 @@ plot(density(est[,1])$x,density(est[,1])$y,type="l",xlab="Distribution of estima
 plot(density(est[,2])$x,density(est[,2])$y,type="l",xlab="Distribution of estimated S.E.",ylab="Density")
 plot(density(est[,3])$x,density(est[,3])$y,type="l",xlab="Distribution of R^2",ylab="Density")
 ```
+# muss noch guten vergleich finden
+
+2. Plot both the aggregate consumption and aggregate income time-series (these series are
+called cons and inc respectively in the csv file). Compute and report 12-period ACF and
+PACF functions for each series and comment on their shape
+
+```{r}
+# Load data
+data <- read.csv("data_assign_p4.csv")
+```
+
+```{r}
+fmt <- "%YQ%q"
+data$obs <- as.yearqtr(data$obs, format = fmt)
+```
+
+
+```{r}
+ggplot(data, aes(obs, CONS)) + 
+  geom_point() + 
+  geom_line() +
+  scale_x_yearqtr(format = fmt)
+```
+
+```{r}
+ggplot(data, aes(obs, INC)) + 
+  geom_point() + 
+  geom_line() +
+  scale_x_yearqtr(format = fmt)
+```
+
+```{r}
+Acf(
+  data$CONS,
+  lag.max = 12
+)
+```
+
+```{r}
+Pacf(
+  data$CONS,
+  lag.max = 12
+)
+```
+```{r}
+Acf(
+  data$INC,
+  lag.max = 12
+)
+```
+
+```{r}
+Pacf(
+  data$INC,
+  lag.max = 12
+)
+```
+
+3. Perform an ADF unit-root test on each series using the general-to-specific approach and
+report the values of the test statistics. Is the unit-root hypothesis rejected in any of them?
+```{r}
+# Set combinatorics where 1 last lag is intercept
+max_lag = 6
+lag <- c(1:max_lag)
+comb_set <- CombSet(lag, m=1:max_lag)
+comb = 0
+for (i in 1:max_lag){
+  comb = comb + CombN(max_lag,i)
+}
+lag_struc <- matrix(0,nrow = comb, ncol =max_lag)
+lag_max <- rep(0, comb)
+
+# Lag 1
+lag_n = 1
+for (i in 1:length(comb_set[[lag_n]])){
+  lag = comb_set[[lag_n]][i]
+  lag_struc[i,lag] = NA
+}
+
+# Lag 2 and higher
+start = 0
+for (n in 2:max_lag){
+  lag_n = n
+  start = start + length(comb_set[[lag_n-1]][,1])
+  for (i in 1:length(comb_set[[lag_n]][,1])){
+    for (j in 1:lag_n){
+      lag = comb_set[[lag_n]][i,j]
+      lag_struc[start + i,lag] = NA
+    }
+  }
+}
+
+# Delete model with only intercept
+lag_struc <- lag_struc[-max_lag,]
+comb = comb -1
+```
+
+```{r}
+# Estimate all models and pick specification with lowest AIC - CONS
+ts <- data$CONS
+aics <- rep(0, comb)
+
+for (i in 1:comb){
+  logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
+  k = sum(is.na(lag_struc[i,]))
+  aics[i] = 2*k - 2*logl
+}
+min(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+
+# Perform ADF Test
+ts <- ts(ts)
+struc <- c(0)
+for (i in 1:length(lag_struc[which.min(aics),]-1)){
+  if (is.na(lag_struc[which.min(aics),i])){
+    struc <- cbind(struc, i)
+  } 
+}
+struc <- as.numeric(struc[,-1])
+struc <- head(struc,-1)
+if(is.na(lag_struc[which.min(aics),i])){
+  int = TRUE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
+} else{
+  int = FALSE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc)-1)
+}
+beta = summary(mod)$coefficients[1,1]
+se = summary(mod)$coefficients[1,2]
+adf = beta/se
+adf
+
+if(int==TRUE){
+  adf< (-1.616)
+}else{
+  adf< (-2.568)
+}
+```
+
+```{r}
+# Estimate all models and pick specification with lowest AIC - INC
+ts <- data$INC
+aics <- rep(0, (comb-1))
+
+for (i in 1:(comb-1)){ # there is an issue with (1,1,1,1,1,1,)
+  logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
+  k = sum(is.na(lag_struc[i,]))
+  aics[i] = 2*k - 2*logl
+}
+min(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+
+# Perform ADF Test
+ts <- ts(ts)
+struc <- c(0)
+for (i in 1:length(lag_struc[which.min(aics),]-1)){
+  if (is.na(lag_struc[which.min(aics),i])){
+    struc <- cbind(struc, i)
+  } 
+}
+struc <- as.numeric(struc[,-1])
+struc <- head(struc,-1)
+if(is.na(lag_struc[which.min(aics),i])){
+  int = TRUE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
+} else{
+  int = FALSE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc)-1)
+}
+beta = summary(mod)$coefficients[1,1]
+se = summary(mod)$coefficients[1,2]
+adf = beta/se
+adf
+
+if(int==TRUE){
+  adf< (-1.616)
+}else{
+  adf< (-2.568)
+}
+```
+
+# check out problem 
+
+4. Perform an ADF unit-root test on the first difference of each series using the general-tospecific approach and report the values of the test statistics. Is the unit-root hypothesis
+rejected in any of them? What do you conclude about the order of integration of these
+time series?
+
+```{r}
+data2 <- data %>%
+  mutate_at(vars(INC:CONS), list(~ .x - lag(.x)))
+```
+
+```{r}
+# Estimate all models and pick specification with lowest AIC - CONS
+ts <- data2$CONS
+aics <- rep(0, comb)
+
+for (i in 1:comb){
+  logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
+  k = sum(is.na(lag_struc[i,]))
+  aics[i] = 2*k - 2*logl
+}
+min(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+
+# Perform ADF Test
+ts <- ts(ts)
+struc <- c(0)
+for (i in 1:length(lag_struc[which.min(aics),]-1)){
+  if (is.na(lag_struc[which.min(aics),i])){
+    struc <- cbind(struc, i)
+  } 
+}
+struc <- as.numeric(struc[,-1])
+struc <- head(struc,-1)
+if(is.na(lag_struc[which.min(aics),i])){
+  int = TRUE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
+} else{
+  int = FALSE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc)-1)
+}
+beta = summary(mod)$coefficients[1,1]
+se = summary(mod)$coefficients[1,2]
+adf = beta/se
+adf
+
+if(int==TRUE){
+  adf< (-1.616)
+}else{
+  adf< (-2.568)
+}
+```
+```{r}
+# Estimate all models and pick specification with lowest AIC - INC
+ts <- data2$INC
+aics <- rep(0, comb)
+
+for (i in 1:comb){
+  logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
+  k = sum(is.na(lag_struc[i,]))
+  aics[i] = 2*k - 2*logl
+}
+min(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+
+# Perform ADF Test
+ts <- ts(ts)
+struc <- c(0)
+for (i in 1:length(lag_struc[which.min(aics),]-1)){
+  if (is.na(lag_struc[which.min(aics),i])){
+    struc <- cbind(struc, i)
+  } 
+}
+struc <- as.numeric(struc[,-1])
+struc <- head(struc,-1)
+if(is.na(lag_struc[which.min(aics),i])){
+  int = TRUE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
+} else{
+  int = FALSE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc)-1)
+}
+beta = summary(mod)$coefficients[1,1]
+se = summary(mod)$coefficients[1,2]
+adf = beta/se
+adf
+
+if(int==TRUE){
+  adf< (-1.616)
+}else{
+  adf< (-2.568)
+}
+```
+
+5. Assuming both series are I(1), test for cointegration between consumption and income by
+regressing consumption on income and performing a unit-root test on the residuals. Report
+the estimated regression coefficients. Plot the regression residuals. Use the Schwartz
+Information Criterion (SIC) to determine the number of ADF lags in your unit-root residual
+test. Report the cointegration test statistic. Do you reject cointegration?
+
+```{r}
+test <- lm(data$CONS ~ data$INC)
+lambda <- test$coefficients[2]
+delta <- test$coefficients[1]
+lambda
+delta
+```
+
+```{r}
+data$Z <- data$CONS - delta - lambda*data$INC
+```
+```{r}
+ggplot(data, aes(obs, Z)) + 
+  geom_point() + 
+  scale_x_yearqtr(format = fmt)
+```
+```{r}
+# Estimate all models and pick specification with lowest AIC - INC
+ts <- data$Z
+aics <- rep(0, comb)
+
+for (i in 1:comb){
+  logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
+  k = sum(is.na(lag_struc[i,]))
+  aics[i] = 2*k - 2*logl
+}
+min(aics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+
+# Perform ADF Test
+ts <- ts(ts)
+struc <- c(0)
+for (i in 1:length(lag_struc[which.min(aics),]-1)){
+  if (is.na(lag_struc[which.min(aics),i])){
+    struc <- cbind(struc, i)
+  } 
+}
+struc <- as.numeric(struc[,-1])
+struc <- head(struc,-1)
+if(is.na(lag_struc[which.min(aics),i])){
+  int = TRUE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
+} else{
+  int = FALSE
+  mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc)-1)
+}
+beta = summary(mod)$coefficients[1,1]
+se = summary(mod)$coefficients[1,2]
+adf = beta/se
+adf
+
+if(int==TRUE){
+  adf< (-1.616)
+}else{
+  adf< (-2.568)
+}
+```
+

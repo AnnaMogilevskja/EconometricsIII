@@ -27,6 +27,11 @@ library(DescTools)
 library(naniar)
 library(tseries)
 library(dplyr)
+library(apt)
+library(tsDyn)
+library(vars)
+library(urca)
+library(tidyverse)
 ```
 
 # Question 1
@@ -640,6 +645,7 @@ cointegrated using a Monte Carlo simulation study. Furthermore, analyze the clai
 superconsistency of the estimator of the static cointegrating regression. 
 
 ```{r}
+# Simulation with x being non-stationary
 set.seed(20)
 l = c(50, 100)
 n = 10000
@@ -688,6 +694,7 @@ for (j in 1:length(l)){
 ```
 
 ```{r}
+# Simulation with x being stationary
 set.seed(20)
 l = c(50, 100)
 n = 10000
@@ -741,6 +748,7 @@ plot(density(est[,1])$x,density(est[,1])$y,type="l",xlab="Distribution of estima
 plot(density(est[,2])$x,density(est[,2])$y,type="l",xlab="Distribution of estimated S.E.",ylab="Density")
 plot(density(est[,3])$x,density(est[,3])$y,type="l",xlab="Distribution of R^2",ylab="Density")
 ```
+
 # muss noch guten vergleich finden
 
 2. Plot both the aggregate consumption and aggregate income time-series (these series are
@@ -759,6 +767,7 @@ data$obs <- as.yearqtr(data$obs, format = fmt)
 
 
 ```{r}
+# Plot of consumption
 ggplot(data, aes(obs, CONS)) + 
   geom_point() + 
   geom_line() +
@@ -766,6 +775,7 @@ ggplot(data, aes(obs, CONS)) +
 ```
 
 ```{r}
+# Plot of income
 ggplot(data, aes(obs, INC)) + 
   geom_point() + 
   geom_line() +
@@ -929,6 +939,7 @@ rejected in any of them? What do you conclude about the order of integration of 
 time series?
 
 ```{r}
+# Calculate first differences of income and consumption data
 data2 <- data %>%
   mutate_at(vars(INC:CONS), list(~ .x - lag(.x)))
 ```
@@ -1023,6 +1034,7 @@ Information Criterion (SIC) to determine the number of ADF lags in your unit-roo
 test. Report the cointegration test statistic. Do you reject cointegration?
 
 ```{r}
+# Regress Consumption on Income to get get estimated regression coefficients
 test <- lm(data$CONS ~ data$INC)
 lambda <- test$coefficients[2]
 delta <- test$coefficients[1]
@@ -1031,9 +1043,11 @@ delta
 ```
 
 ```{r}
+# Calculate regression residuals
 data$Z <- data$CONS - delta - lambda*data$INC
 ```
 ```{r}
+# Plot regression residuals
 ggplot(data, aes(obs, Z)) + 
   geom_point() + 
   scale_x_yearqtr(format = fmt)
@@ -1079,4 +1093,76 @@ if(int==TRUE){
   adf< (-2.568)
 }
 ```
+As H0 is rejected, we have cointegration.
 
+6. Estimate an error correction model for consumption using the estimated residuals from
+the cointegration regression above. Use a general-to-specific modeling approach for the
+short-run dynamics. Report the estimated model. Report and interpret the short-run and
+long-run multipliers. Report and interpret the error correction coefficient.
+
+```{r}
+# Transform data into times seires format
+tsCONS <- as.numeric(ts(data$CONS, start= c(1988, 1), end = c(2012, 1), frequency = 4))
+tsINC <- as.numeric(ts(data$INC, start= c(1988, 1), end = c(2012, 1), frequency = 4))
+dset <- cbind(tsCONS, tsINC)
+```
+
+```{r}
+#Selecting the Optimal Number of Lags (Recall, this is p - 1)
+lagselect <- VARselect(dset, lag.max = 7, type = "const")
+lagselect$selection
+lagselect$criteria
+```
+```{r}
+# use one lag according to SIC (2-1 = 1), and co-integration order of 1 (from previous subquestion)
+# estimate error correction model
+ecm <- VECM(dset, 1, r = 1, estim =("2OLS"))
+summary(ecm)
+```
+8. At the peak of the recession, during the 2nd quarter of 2009, you are asked to forecast the
+value of consumption for the 3rd quarter of 2009. Do you expect aggregate consumption
+to raise or fall? Report the predicted change in the value of consumption. How much of
+this change in consumption is due to the ‘correction mechanism’ alone? Report your point
+forecast for consumption for the 3rd quarter of 2009.
+```{r}
+# Estimate an AR model for first difference of income
+arINC <- arima(data2$INC, order = c(4,0,0))
+arINC <- coeftest(arINC)
+```
+```{r}
+# Forecast first differences of income based on estimated AR model
+h = 2
+INC <- append(rep(data2$INC[n],1), numeric(h))
+
+for (i in 1:h){
+  j = i + 1
+  INC[j] <- arINC[5,1] + arINC[1,1]*INC[j-1]
+}
+```
+
+
+```{r}
+# Forecast first differences of consumption based on ECM model and forecasted values of first differences of income
+h = 2
+CONS <- append(rep(data2$CONS[n],1), numeric(h))
+Z <- append(rep(data$Z[n],2), numeric(h))
+
+for (i in 1:h){
+  j = i + 1
+  CONS[j] <- ecm$coefficients[1,1]*Z[j-1] + ecm$coefficients[1,2] + ecm$coefficients[1,4]*INC[j]
+}
+```
+
+```{r}
+# Forecast first differences of consumption based on ECM model and forecasted values of first differences of income
+h = 2
+CONS2 <- append(rep(data2$CONS[n],1), numeric(h))
+Z <- append(rep(data$Z[n],2), numeric(h))
+
+for (i in 1:h){
+  j = i + 1
+  CONS2[j] <- (ecm$coefficients[1,1]/(1-ecm$coefficients[1,3]))*Z[j-1] + (ecm$coefficients[1,2]/(1-ecm$coefficients[1,3])) + (ecm$coefficients[1,4]/(1-ecm$coefficients[1,3]))*INC[j]
+}
+```
+
+# welche der beiden ist richtig????

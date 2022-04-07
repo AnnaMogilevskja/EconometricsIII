@@ -1124,6 +1124,13 @@ value of consumption for the 3rd quarter of 2009. Do you expect aggregate consum
 to raise or fall? Report the predicted change in the value of consumption. How much of
 this change in consumption is due to the ‘correction mechanism’ alone? Report your point
 forecast for consumption for the 3rd quarter of 2009.
+
+```{r}
+forecast1 <- predict(ecm, n.ahead=2)
+forecast1
+```
+# this should be right
+
 ```{r}
 # Estimate an AR model for first difference of income
 arINC <- arima(data2$INC, order = c(4,0,0))

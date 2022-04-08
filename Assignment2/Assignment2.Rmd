@@ -32,6 +32,7 @@ library(tsDyn)
 library(vars)
 library(urca)
 library(tidyverse)
+library(ecm)
 ```
 
 # Question 1
@@ -176,27 +177,27 @@ comb = comb -1
 ```{r}
 # Estimate all models and pick specification with lowest AIC - APPLE
 ts <- data$APPLE
-aics <- rep(0, comb)
+sics <- rep(0, comb)
 
 for (i in 1:comb){
   logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
   k = sum(is.na(lag_struc[i,]))
-  aics[i] = 2*k - 2*logl
+  sics[i] = k*log(length(ts)) - 2*logl
 }
-min(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+min(sics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(sics),], method ="CSS")
 
 # Perform ADF Test
 ts <- ts(ts)
 struc <- c(0)
-for (i in 1:length(lag_struc[which.min(aics),]-1)){
-  if (is.na(lag_struc[which.min(aics),i])){
+for (i in 1:length(lag_struc[which.min(sics),]-1)){
+  if (is.na(lag_struc[which.min(sics),i])){
     struc <- cbind(struc, i)
   } 
 }
 struc <- as.numeric(struc[,-1])
 struc <- head(struc,-1)
-if(is.na(lag_struc[which.min(aics),i])){
+if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
 } else{
@@ -218,27 +219,27 @@ if(int==TRUE){
 ```{r}
 # Estimate all models and pick specification with lowest AIC - EXXON_MOBIL
 ts <- data$EXXON_MOBIL
-aics <- rep(0, comb)
+sics <- rep(0, comb)
 
 for (i in 1:comb){
   logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
   k = sum(is.na(lag_struc[i,]))
-  aics[i] = 2*k - 2*logl
+  sics[i] = k*log(length(ts)) - 2*logl
 }
-min(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+min(sics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(sics),], method ="CSS")
 
 # Perform ADF Test
 ts <- ts(ts)
 struc <- c(0)
-for (i in 1:length(lag_struc[which.min(aics),]-1)){
-  if (is.na(lag_struc[which.min(aics),i])){
+for (i in 1:length(lag_struc[which.min(sics),]-1)){
+  if (is.na(lag_struc[which.min(sics),i])){
     struc <- cbind(struc, i)
   } 
 }
 struc <- as.numeric(struc[,-1])
 struc <- head(struc,-1)
-if(is.na(lag_struc[which.min(aics),i])){
+if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
 } else{
@@ -260,27 +261,27 @@ if(int==TRUE){
 ```{r}
 # Estimate all models and pick specification with lowest AIC - FORD
 ts <- data$FORD
-aics <- rep(0, comb)
+sics <- rep(0, comb)
 
 for (i in 1:comb){
   logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
   k = sum(is.na(lag_struc[i,]))
-  aics[i] = 2*k - 2*logl
+  sics[i] = k*log(length(ts)) - 2*logl
 }
-min(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+min(sics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(sics),], method ="CSS")
 
 # Perform ADF Test
 ts <- ts(ts)
 struc <- c(0)
-for (i in 1:length(lag_struc[which.min(aics),]-1)){
-  if (is.na(lag_struc[which.min(aics),i])){
+for (i in 1:length(lag_struc[which.min(sics),]-1)){
+  if (is.na(lag_struc[which.min(sics),i])){
     struc <- cbind(struc, i)
   } 
 }
 struc <- as.numeric(struc[,-1])
 struc <- head(struc,-1)
-if(is.na(lag_struc[which.min(aics),i])){
+if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
 } else{
@@ -302,27 +303,27 @@ if(int==TRUE){
 ```{r}
 # Estimate all models and pick specification with lowest AIC - GEN_ELECTRIC
 ts <- data$GEN_ELECTRIC
-aics <- rep(0, comb)
+sics <- rep(0, comb)
 
 for (i in 1:comb){
   logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
   k = sum(is.na(lag_struc[i,]))
-  aics[i] = 2*k - 2*logl
+  sics[i] = k*log(length(ts)) - 2*logl
 }
-min(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+min(sics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(sics),], method ="CSS")
 
 # Perform ADF Test
 ts <- ts(ts)
 struc <- c(0)
-for (i in 1:length(lag_struc[which.min(aics),]-1)){
-  if (is.na(lag_struc[which.min(aics),i])){
+for (i in 1:length(lag_struc[which.min(sics),]-1)){
+  if (is.na(lag_struc[which.min(sics),i])){
     struc <- cbind(struc, i)
   } 
 }
 struc <- as.numeric(struc[,-1])
 struc <- head(struc,-1)
-if(is.na(lag_struc[which.min(aics),i])){
+if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
 } else{
@@ -344,27 +345,27 @@ if(int==TRUE){
 ```{r}
 # Estimate all models and pick specification with lowest AIC - INTEL
 ts <- data$INTEL
-aics <- rep(0, comb)
+sics <- rep(0, comb)
 
 for (i in 1:comb){
   logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
   k = sum(is.na(lag_struc[i,]))
-  aics[i] = 2*k - 2*logl
+  sics[i] = k*log(length(ts)) - 2*logl
 }
-min(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+min(sics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(sics),], method ="CSS")
 
 # Perform ADF Test
 ts <- ts(ts)
 struc <- c(0)
-for (i in 1:length(lag_struc[which.min(aics),]-1)){
-  if (is.na(lag_struc[which.min(aics),i])){
+for (i in 1:length(lag_struc[which.min(sics),]-1)){
+  if (is.na(lag_struc[which.min(sics),i])){
     struc <- cbind(struc, i)
   } 
 }
 struc <- as.numeric(struc[,-1])
 struc <- head(struc,-1)
-if(is.na(lag_struc[which.min(aics),i])){
+if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
 } else{
@@ -386,27 +387,27 @@ if(int==TRUE){
 ```{r}
 # Estimate all models and pick specification with highest AIC - MICROSOFT
 ts <- data$MICROSOFT
-aics <- rep(0, comb)
+sics <- rep(0, comb)
 
 for (i in 1:comb){
   logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
   k = sum(is.na(lag_struc[i,]))
-  aics[i] = 2*k - 2*logl
+  sics[i] = k*log(length(ts)) - 2*logl
 }
-min(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+min(sics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(sics),], method ="CSS")
 
 # Perform ADF Test
 ts <- ts(ts)
 struc <- c(0)
-for (i in 1:length(lag_struc[which.min(aics),]-1)){
-  if (is.na(lag_struc[which.min(aics),i])){
+for (i in 1:length(lag_struc[which.min(sics),]-1)){
+  if (is.na(lag_struc[which.min(sics),i])){
     struc <- cbind(struc, i)
   } 
 }
 struc <- as.numeric(struc[,-1])
 struc <- head(struc,-1)
-if(is.na(lag_struc[which.min(aics),i])){
+if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
 } else{
@@ -428,27 +429,27 @@ if(int==TRUE){
 ```{r}
 # Estimate all models and pick specification with highest AIC - NETFLIX
 ts <- data$NETFLIX
-aics <- rep(0, comb)
+sics <- rep(0, comb)
 
 for (i in 1:comb){
   logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
   k = sum(is.na(lag_struc[i,]))
-  aics[i] = 2*k - 2*logl
+  sics[i] = k*log(length(ts)) - 2*logl
 }
-min(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+min(sics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(sics),], method ="CSS")
 
 # Perform ADF Test
 ts <- ts(ts)
 struc <- c(0)
-for (i in 1:length(lag_struc[which.min(aics),]-1)){
-  if (is.na(lag_struc[which.min(aics),i])){
+for (i in 1:length(lag_struc[which.min(sics),]-1)){
+  if (is.na(lag_struc[which.min(sics),i])){
     struc <- cbind(struc, i)
   } 
 }
 struc <- as.numeric(struc[,-1])
 struc <- head(struc,-1)
-if(is.na(lag_struc[which.min(aics),i])){
+if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
 } else{
@@ -470,27 +471,27 @@ if(int==TRUE){
 ```{r}
 # Estimate all models and pick specification with highest AIC - NOKIA
 ts <- data$NOKIA
-aics <- rep(0, comb)
+sics <- rep(0, comb)
 
 for (i in 1:comb){
   logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
   k = sum(is.na(lag_struc[i,]))
-  aics[i] = 2*k - 2*logl
+  sics[i] = k*log(length(ts)) - 2*logl
 }
-min(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+min(sics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(sics),], method ="CSS")
 
 # Perform ADF Test
 ts <- ts(ts)
 struc <- c(0)
-for (i in 1:length(lag_struc[which.min(aics),]-1)){
-  if (is.na(lag_struc[which.min(aics),i])){
+for (i in 1:length(lag_struc[which.min(sics),]-1)){
+  if (is.na(lag_struc[which.min(sics),i])){
     struc <- cbind(struc, i)
   } 
 }
 struc <- as.numeric(struc[,-1])
 struc <- head(struc,-1)
-if(is.na(lag_struc[which.min(aics),i])){
+if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
 } else{
@@ -512,27 +513,27 @@ if(int==TRUE){
 ```{r}
 # Estimate all models and pick specification with highest AIC - SP500
 ts <- data$SP500
-aics <- rep(0, comb)
+sics <- rep(0, comb)
 
 for (i in 1:comb){
   logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
   k = sum(is.na(lag_struc[i,]))
-  aics[i] = 2*k - 2*logl
+  sics[i] = k*log(length(ts)) - 2*logl
 }
-min(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+min(sics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(sics),], method ="CSS")
 
 # Perform ADF Test
 ts <- ts(ts)
 struc <- c(0)
-for (i in 1:length(lag_struc[which.min(aics),]-1)){
-  if (is.na(lag_struc[which.min(aics),i])){
+for (i in 1:length(lag_struc[which.min(sics),]-1)){
+  if (is.na(lag_struc[which.min(sics),i])){
     struc <- cbind(struc, i)
   } 
 }
 struc <- as.numeric(struc[,-1])
 struc <- head(struc,-1)
-if(is.na(lag_struc[which.min(aics),i])){
+if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
 } else{
@@ -554,27 +555,27 @@ if(int==TRUE){
 ```{r}
 # Estimate all models and pick specification with highest AIC - YAHOO
 ts <- data$YAHOO
-aics <- rep(0, comb)
+sics <- rep(0, comb)
 
 for (i in 1:comb){
   logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
   k = sum(is.na(lag_struc[i,]))
-  aics[i] = 2*k - 2*logl
+  sics[i] = k*log(length(ts)) - 2*logl
 }
-min(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+min(sics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(sics),], method ="CSS")
 
 # Perform ADF Test
 ts <- ts(ts)
 struc <- c(0)
-for (i in 1:length(lag_struc[which.min(aics),]-1)){
-  if (is.na(lag_struc[which.min(aics),i])){
+for (i in 1:length(lag_struc[which.min(sics),]-1)){
+  if (is.na(lag_struc[which.min(sics),i])){
     struc <- cbind(struc, i)
   } 
 }
 struc <- as.numeric(struc[,-1])
 struc <- head(struc,-1)
-if(is.na(lag_struc[which.min(aics),i])){
+if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
 } else{
@@ -647,7 +648,7 @@ superconsistency of the estimator of the static cointegrating regression.
 ```{r}
 # Simulation with x being non-stationary
 set.seed(20)
-l = c(50, 100)
+l = c(50, 100, 200)
 n = 10000
 
 sigma_u = 1
@@ -696,7 +697,7 @@ for (j in 1:length(l)){
 ```{r}
 # Simulation with x being stationary
 set.seed(20)
-l = c(50, 100)
+l = c(50, 100, 200)
 n = 10000
 
 sigma_u = 1
@@ -851,27 +852,27 @@ comb = comb -1
 ```{r}
 # Estimate all models and pick specification with lowest AIC - CONS
 ts <- data$CONS
-aics <- rep(0, comb)
+sics <- rep(0, comb)
 
 for (i in 1:comb){
   logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
   k = sum(is.na(lag_struc[i,]))
-  aics[i] = 2*k - 2*logl
+  sics[i] = k*log(length(ts)) - 2*logl
 }
-min(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+min(sics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(sics),], method ="CSS")
 
 # Perform ADF Test
 ts <- ts(ts)
 struc <- c(0)
-for (i in 1:length(lag_struc[which.min(aics),]-1)){
-  if (is.na(lag_struc[which.min(aics),i])){
+for (i in 1:length(lag_struc[which.min(sics),]-1)){
+  if (is.na(lag_struc[which.min(sics),i])){
     struc <- cbind(struc, i)
   } 
 }
 struc <- as.numeric(struc[,-1])
 struc <- head(struc,-1)
-if(is.na(lag_struc[which.min(aics),i])){
+if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
 } else{
@@ -893,27 +894,27 @@ if(int==TRUE){
 ```{r}
 # Estimate all models and pick specification with lowest AIC - INC
 ts <- data$INC
-aics <- rep(0, (comb-1))
+sics <- rep(0, (comb-1))
 
 for (i in 1:(comb-1)){ # there is an issue with (1,1,1,1,1,1,)
   logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
   k = sum(is.na(lag_struc[i,]))
-  aics[i] = 2*k - 2*logl
+  sics[i] = k*log(length(ts)) - 2*logl
 }
-min(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+min(sics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(sics),], method ="CSS")
 
 # Perform ADF Test
 ts <- ts(ts)
 struc <- c(0)
-for (i in 1:length(lag_struc[which.min(aics),]-1)){
-  if (is.na(lag_struc[which.min(aics),i])){
+for (i in 1:length(lag_struc[which.min(sics),]-1)){
+  if (is.na(lag_struc[which.min(sics),i])){
     struc <- cbind(struc, i)
   } 
 }
 struc <- as.numeric(struc[,-1])
 struc <- head(struc,-1)
-if(is.na(lag_struc[which.min(aics),i])){
+if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
 } else{
@@ -947,27 +948,27 @@ data2 <- data %>%
 ```{r}
 # Estimate all models and pick specification with lowest AIC - CONS
 ts <- data2$CONS
-aics <- rep(0, comb)
+sics <- rep(0, comb)
 
 for (i in 1:comb){
   logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
   k = sum(is.na(lag_struc[i,]))
-  aics[i] = 2*k - 2*logl
+  sics[i] = k*log(length(ts)) - 2*logl
 }
-min(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+min(sics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(sics),], method ="CSS")
 
 # Perform ADF Test
 ts <- ts(ts)
 struc <- c(0)
-for (i in 1:length(lag_struc[which.min(aics),]-1)){
-  if (is.na(lag_struc[which.min(aics),i])){
+for (i in 1:length(lag_struc[which.min(sics),]-1)){
+  if (is.na(lag_struc[which.min(sics),i])){
     struc <- cbind(struc, i)
   } 
 }
 struc <- as.numeric(struc[,-1])
 struc <- head(struc,-1)
-if(is.na(lag_struc[which.min(aics),i])){
+if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
 } else{
@@ -988,27 +989,27 @@ if(int==TRUE){
 ```{r}
 # Estimate all models and pick specification with lowest AIC - INC
 ts <- data2$INC
-aics <- rep(0, comb)
+sics <- rep(0, comb)
 
 for (i in 1:comb){
   logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
   k = sum(is.na(lag_struc[i,]))
-  aics[i] = 2*k - 2*logl
+  sics[i] = k*log(length(ts)) - 2*logl
 }
-min(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
-
+min(sics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(sics),], method ="CSS")
+INCfc <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(sics),], method ="CSS") # for 4.8
 # Perform ADF Test
 ts <- ts(ts)
 struc <- c(0)
-for (i in 1:length(lag_struc[which.min(aics),]-1)){
-  if (is.na(lag_struc[which.min(aics),i])){
+for (i in 1:length(lag_struc[which.min(sics),]-1)){
+  if (is.na(lag_struc[which.min(sics),i])){
     struc <- cbind(struc, i)
   } 
 }
 struc <- as.numeric(struc[,-1])
 struc <- head(struc,-1)
-if(is.na(lag_struc[which.min(aics),i])){
+if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
 } else{
@@ -1045,6 +1046,8 @@ delta
 ```{r}
 # Calculate regression residuals
 data$Z <- data$CONS - delta - lambda*data$INC
+# Add also to data2
+data2$Z <- data$Z
 ```
 ```{r}
 # Plot regression residuals
@@ -1055,27 +1058,27 @@ ggplot(data, aes(obs, Z)) +
 ```{r}
 # Estimate all models and pick specification with lowest AIC - INC
 ts <- data$Z
-aics <- rep(0, comb)
+sics <- rep(0, comb)
 
 for (i in 1:comb){
   logl <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[i,], method ="CSS")$loglik
   k = sum(is.na(lag_struc[i,]))
-  aics[i] = 2*k - 2*logl
+  sics[i] = k*log(length(ts)) - 2*logl
 }
-min(aics)
-arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(aics),], method ="CSS")
+min(sics)
+arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(sics),], method ="CSS")
 
 # Perform ADF Test
 ts <- ts(ts)
 struc <- c(0)
-for (i in 1:length(lag_struc[which.min(aics),]-1)){
-  if (is.na(lag_struc[which.min(aics),i])){
+for (i in 1:length(lag_struc[which.min(sics),]-1)){
+  if (is.na(lag_struc[which.min(sics),i])){
     struc <- cbind(struc, i)
   } 
 }
 struc <- as.numeric(struc[,-1])
 struc <- head(struc,-1)
-if(is.na(lag_struc[which.min(aics),i])){
+if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
 } else{
@@ -1102,74 +1105,79 @@ long-run multipliers. Report and interpret the error correction coefficient.
 
 ```{r}
 # Transform data into times seires format
-tsCONS <- as.numeric(ts(data$CONS, start= c(1988, 1), end = c(2012, 1), frequency = 4))
-tsINC <- as.numeric(ts(data$INC, start= c(1988, 1), end = c(2012, 1), frequency = 4))
-dset <- cbind(tsCONS, tsINC)
+tsCONS <- ts(data$CONS, start= c(1988, 1), end = c(2012, 1), frequency = 4)
+tsINC <- ts(data$INC, start= c(1988, 1), end = c(2012, 1), frequency = 4)
+tsZ <- ts(data$Z, start= c(1988, 1), end = c(2012, 1), frequency = 4)
 ```
 
 ```{r}
 #Selecting the Optimal Number of Lags (Recall, this is p - 1)
-lagselect <- VARselect(dset, lag.max = 7, type = "const")
+data2 <- na.omit(data2)
+lagselect <- VARselect(data2$CONS, lag.max = 7, type = "const")
 lagselect$selection
 lagselect$criteria
 ```
 ```{r}
 # use one lag according to SIC (2-1 = 1), and co-integration order of 1 (from previous subquestion)
 # estimate error correction model
-ecm <- VECM(dset, 1, r = 1, estim =("2OLS"))
+# data2 <- na.omit(data2)
+ecm <- dynlm(diff(tsCONS) ~ L(tsZ, 1) + L(diff(tsINC), 0:4) + L(diff(tsCONS), 1:4))
+# ecm <- VECM(dset, 1, r = 1, estim =("2OLS"))
 summary(ecm)
+# drio first lag of CONS blabla collinearity
 ```
+y ~ x * lag(y,-1)
 8. At the peak of the recession, during the 2nd quarter of 2009, you are asked to forecast the
 value of consumption for the 3rd quarter of 2009. Do you expect aggregate consumption
 to raise or fall? Report the predicted change in the value of consumption. How much of
 this change in consumption is due to the ‘correction mechanism’ alone? Report your point
 forecast for consumption for the 3rd quarter of 2009.
-
 ```{r}
-forecast1 <- predict(ecm, n.ahead=2)
-forecast1
-```
-# this should be right
-
-```{r}
-# Estimate an AR model for first difference of income
-arINC <- arima(data2$INC, order = c(4,0,0))
-arINC <- coeftest(arINC)
+ecm <- dynlm(diff(tsCONS) ~ L(tsZ, 1) + L(diff(tsINC), 0:3) + L(diff(tsCONS), 1:3))
+# ecm <- VECM(dset, 1, r = 1, estim =("2OLS"))
+summary(ecm)
 ```
 ```{r}
-# Forecast first differences of income based on estimated AR model
-h = 2
-INC <- append(rep(data2$INC[n],1), numeric(h))
-
-for (i in 1:h){
-  j = i + 1
-  INC[j] <- arINC[5,1] + arINC[1,1]*INC[j-1]
-}
+ecm <- dynlm(diff(tsCONS) ~ L(tsZ, 1) + L(diff(tsINC), 0:2) + L(diff(tsCONS), 1:3))
+# ecm <- VECM(dset, 1, r = 1, estim =("2OLS"))
+summary(ecm)
 ```
-
-
 ```{r}
-# Forecast first differences of consumption based on ECM model and forecasted values of first differences of income
-h = 2
-CONS <- append(rep(data2$CONS[n],1), numeric(h))
-Z <- append(rep(data$Z[n],2), numeric(h))
-
-for (i in 1:h){
-  j = i + 1
-  CONS[j] <- ecm$coefficients[1,1]*Z[j-1] + ecm$coefficients[1,2] + ecm$coefficients[1,4]*INC[j]
-}
+ecm <- dynlm(diff(tsCONS) ~ L(tsZ, 1) + L(diff(tsINC), 0:1) + L(diff(tsCONS), c(1,3)))
+# ecm <- VECM(dset, 1, r = 1, estim =("2OLS"))
+summary(ecm)
+```
+```{r}
+ecm <- dynlm(diff(tsCONS) ~ L(tsZ, 1) +L(diff(tsINC), 0) + L(diff(tsCONS), c(1,3)))
+# ecm <- VECM(dset, 1, r = 1, estim =("2OLS"))
+summary(ecm)
+```
+```{r}
+ecm <- dynlm(diff(tsCONS) ~ L(tsZ, 1) +L(diff(tsINC), 0) + L(diff(tsCONS), 3))
+# ecm <- VECM(dset, 1, r = 1, estim =("2OLS"))
+summary(ecm)
 ```
 
 ```{r}
-# Forecast first differences of consumption based on ECM model and forecasted values of first differences of income
-h = 2
-CONS2 <- append(rep(data2$CONS[n],1), numeric(h))
-Z <- append(rep(data$Z[n],2), numeric(h))
-
-for (i in 1:h){
-  j = i + 1
-  CONS2[j] <- (ecm$coefficients[1,1]/(1-ecm$coefficients[1,3]))*Z[j-1] + (ecm$coefficients[1,2]/(1-ecm$coefficients[1,3])) + (ecm$coefficients[1,4]/(1-ecm$coefficients[1,3]))*INC[j]
-}
+i = 86
+pred_delta <- ecm$coefficients[1] + ecm$coefficients[2]*data2$Z[i-1] +  ecm$coefficients[3]*data2$INC[i] + ecm$coefficients[4]*data2$CONS[i-3]
+as.numeric(pred_delta)
 ```
 
-# welche der beiden ist richtig????
+```{r}
+i = 86
+pred_delta_lr <- ecm$coefficients[2]*data2$Z[i-1]
+as.numeric(pred_delta_lr)
+```
+
+```{r}
+i = 86
+pred_delta_sr <- ecm$coefficients[1] + ecm$coefficients[3]*data2$INC[i] + ecm$coefficients[4]*data2$CONS[i-3]
+as.numeric(pred_delta_sr)
+```
+
+```{r}
+j=86
+pred <- data$CONS[j] + pred_delta
+as.numeric(pred)
+```

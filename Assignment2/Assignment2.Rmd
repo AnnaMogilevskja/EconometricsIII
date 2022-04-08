@@ -1,7 +1,7 @@
 ---
 title: "Econometrics III - Assignment 2"
 author: "The Explosive Invertibles"
-date: "01 Apr 2022"
+date: "08 Apr 2022"
 output:
   pdf_document:
     includes:
@@ -35,63 +35,95 @@ library(tidyverse)
 library(ecm)
 ```
 
-# Question 1
+## Question 1
+
+1. Analyze the claims regarding the spurious regression problem using a Monte Carlo simulation study.
+
+The code below first simulates both independent random walks
+$$
+Y_t=Y_{t-1}+u_t, \quad u_t \sim \mathcal{N}(0,\sigma_u^2)\\
+X_t=X_{t-1}+v_t, \quad v_t \sim \mathcal{N}(0,\sigma_v^2)
+$$
+for $t\in \{1,2,\dots,T\}$ with $T\in\{50,100,200\}$ separately $n=10.000$ times and subsequently runs the regression
+$$
+Y_t = \alpha +\beta X_t+\varepsilon_t
+$$
+for each simulation round, i.e. $n=10.000$ times, and stores the regression outputs $\hat{\beta}$, $\hat{\beta}/SE(\hat{\beta})$ and $R^2$ for each simulation round respectively for each $T\in\{50,100,200\}$.
 
 ```{r}
-# Load data
-data <- read.csv("data_assign_p3.csv")
-```
-
-
-
-
-```{r}
-set.seed(1)
-t = 100
-n = 10000
+# Simulation with x being non-stationary
+set.seed(20)
+l = c(50, 100, 200)
+n = 1000
 
 sigma_u = 1
 sigma_v = 1
 
-# Create the first value
-x <- data.frame(rnorm(n,0,sigma_v))
-y <- data.frame(rnorm(n,0,sigma_u))
+# Create the list to store dataframes
+simulationsX <- list()
+simulationsY <- list()
+
 
 # Generate Random walk
-for (i in 1:(t-1)){
-v <- as.numeric(x[i,]) + rnorm(n,0,sigma_v)
-x <- data.frame(x, v)
-
-u <- as.numeric(y[i,]) + rnorm(n,0,sigma_u)
-y <- data.frame(y, u)
+for (j in 1:length(l)){
+  t = l[j]
+  x <- data.frame(rnorm(n,0,sigma_v))
+  y <- data.frame(rnorm(n,0,sigma_u))
+  for (i in 1:(t-1)){
+    v <- as.numeric(x[i,]) + rnorm(n,0,sigma_v)
+    x <- data.frame(x, v)
+    
+    u <- as.numeric(y[i,]) + rnorm(n,0,sigma_u)
+    y <- data.frame(y, u)
+  }
+  simulationsX[j] <- list(data.frame(x))
+  simulationsY[j] <- list(data.frame(y))
 }
 
 # Run regressions & store beta, SE and R^2
-est <- matrix(,nrow = n, ncol =3)
+list_est <- list()
 
-for (i in 1:n){
-  reg <- summary(lm(as.numeric(y[i,])~ as.numeric(x[i,])))
-  est[i,1] <- reg$coef[2,1]
-  est[i,2] <- reg$coef[2,2]
-  est[i,3] <- reg$r.squared
+for (j in 1:length(l)){
+  est <- data.frame(matrix(ncol = 3, nrow = n))
+  for (i in 1:n){
+    reg <- summary(lm(as.numeric(simulationsY[[j]][i,])~ as.numeric(simulationsX[[j]][i,])))
+    est[i,1] <- reg$coef[2,1]
+    est[i,2] <- reg$coef[2,1] / reg$coef[2,2]
+    est[i,3] <- reg$r.squared
+  }
+  list_est[j] <- list(data.frame(est))
 }
 
 ```
 
+Below we plot the densities of the simulated estimated betas, t-statistics and $R^2$ for $T\in\{50,100,200\}$.
+
 ```{r}
-# Plot histograms
-plot(density(est[,1])$x,density(est[,1])$y,type="l",xlab="Distribution of estimated betas",ylab="Density")
-plot(density(est[,2])$x,density(est[,2])$y,type="l",xlab="Distribution of estimated S.E.",ylab="Density")
-plot(density(est[,3])$x,density(est[,3])$y,type="l",xlab="Distribution of R^2",ylab="Density")
+# Plot densities
+plot(density(list_est[[3]][,1])$x,density(list_est[[3]][,1])$y,type="l",xlab="Estimated betas",ylab="Density", main="Distribution of estimated betas",col=1)
+points(density(list_est[[2]][,1])$x, density(list_est[[2]][,1])$y, type="l",col=2)
+points(density(list_est[[1]][,1])$x, density(list_est[[1]][,1])$y, type="l",col=3)
+
+plot(density(list_est[[3]][,2])$x,density(list_est[[3]][,2])$y,type="l",xlab="Estimated t-statistics",ylab="Density", main="Distribution of estimated t-statistics",col=1)
+points(density(list_est[[2]][,2])$x, density(list_est[[2]][,2])$y, type="l",col=2)
+points(density(list_est[[1]][,2])$x, density(list_est[[1]][,2])$y, type="l",col=3)
+
+plot(density(list_est[[3]][,3])$x,density(list_est[[3]][,3])$y,type="l",xlab="R^2",ylab="Density", main="Distribution of R^2", col=1)
+points(density(list_est[[2]][,3])$x, density(list_est[[2]][,3])$y, type="l",col=2)
+points(density(list_est[[1]][,3])$x, density(list_est[[1]][,3])$y, type="l",col=3)
 ```
+The plotted densities show symptoms of spurious regression since estimated betas converge to a random variable, i.e. estimated betas differ for each $T\in\{50,100,200\}$, and densities of obtained $R^2$'s for different $T\in\{50,100,200\}$ also do not reveal any sort of convergence. Moreover, estimated t-statistis also differ substantially in their mean scale across each $T\in\{50,100,200\}$. These are clear indications of spurious regression which emerges from regressing two independet time series of integration order 1.
+
+2. Provide plots for two stock market time-series at your choice and report 12-period ACF and PACF functions for those two time series. What does the sample ACF tell you about the dynamic properties of these stocks?
 
 
-2. Provide plots for two stock market time-series at your choice and report 12-period ACF
-and PACF functions for those two time series. What does the sample ACF tell you about
-the dynamic properties of these stocks?
 ```{r}
+# Load data
+data <- read.csv("data_assign_p3.csv")
 data$DATE<- as.Date(data$DATE, format = "%d/%m/%Y")
 ```
+
+Below we plot the stock price time series for Netflix and Apple.
 
 ```{r}
 ggplot(data, aes(x = DATE, y = NETFLIX)) + 
@@ -101,6 +133,7 @@ ggplot(data, aes(x = DATE, y = NETFLIX)) +
 ggplot(data, aes(x = DATE, y = APPLE)) + 
   geom_line() 
 ```
+The plots already raise some suspicion that the time-series may be non-stationary. The issue is investigated further by inspecting the ACF and PACF functions of both stocks which yield further insights about the dynamic properties of the stocks. Note that the functions are plotted alongside $95\%$-confidence intervals.
 
 ```{r}
 Acf(
@@ -129,13 +162,11 @@ Pacf(
 )
 ```
 
-DON'T FORGET TO TALK ABOUT CONFIDENCE INTERVALS!
+The insights that can be drawn based on the auto-correlation functions are similar for both stocks. The correlation of the respective stock price with any of the previous trading days' stock prices (here we consider the previous 12 trading days) is very close to 1. This points at the fact that both time series seem to possess significant memory serving as further worry towards alleged non-stationarity. Partial auto-correlation functions clearly show that this observation is mainly driven by very high correlation with the preceding trading day's price for both stocks. Partial correlation with other previous prices differ for both stock considered here. For Netflix, also other closely preceding end-of-day stock prices are significantly positively correlated with the current price, while this is not the case for Apple. Given the big amount of lags (and overall empirical findings about the time series of stock prices), these findings should be treated with caution and are therfore not further discussed here.
 
-3. Perform an ADF unit-root test for all the 10 time series using the general-to-specific
-approach based on the Schwarz Information Criterion (SIC). Report the values of the
-ADF test statistics. Is the unit-root hypothesis rejected for any time-series at the 90%
-confidence level? Did you expect to reject the unit-root hypothesis for some time-series at
-this confidence level? Justify your answer carefully.
+3. Perform an ADF unit-root test for all the 10 time series using the general-to-specific approach based on the Schwarz Information Criterion (SIC). Report the values of the ADF test statistics. Is the unit-root hypothesis rejected for any time-series at the $90\%$ confidence level? Did you expect to reject the unit-root hypothesis for some time-series at this confidence level? Justify your answer carefully.
+
+To perform the model selection of the AR(p)-model considered in the ADF unit-root-test for each stock in an efficient way, we use a program that estimates the model for each combination of auto-lag order (with and without drift) and selects the one with the lowest Schwarz Information Criterion (SIC). To do so we first create a matrix which includes all possible combinations for some maximum lag-order that can subsequently be used to estimate every model. Note that we do not consider the model only with drift as well as do not consider a deterministic time trend since we handling finance data.
 
 ```{r}
 # Set combinatorics where 1 last lag is intercept
@@ -174,8 +205,28 @@ lag_struc <- lag_struc[-max_lag,]
 comb = comb -1
 ```
 
+The code below estimates the AR(p)-model for each combination and selects the combination with lowest SIC. To calculate the ADF test statistic the selected AR(p)-model needs to be rewritten in the following way for the case that it does not contain holes in its lag structure:
+$$
+X_t=\alpha+\phi_1 X_{t-1}+\dots+\phi_p X_{t-p}+\epsilon_t\\
+\Leftrightarrow \Delta X_t=\alpha+\beta X_{t-1}+\phi^*_2\Delta X_{t-1}+\dots+\phi^*_{t-p+1}\Delta X_{t-p+1}+\epsilon_t\\
+\text{where} \quad \beta=(\phi_1+\dots+\phi_p-1) \quad \text{and} \quad \phi^*_j=-\sum_{i=j}^p\phi_i \quad \text{for} j=2,\dots,p
+$$
+so that the ADF test statistic can be calculated as
+$$
+ADF=\frac{\hat{\beta}}{SE(\hat{\beta})}\sim\text{Dickey-Fuller Distribution with(out) drift}
+$$
+However, such a generalized formulation does not hold if the lag-structure contains arbitrary holes for which the program needs to allow. Shortly before submitting this assignment we became aware of this complication and did not find a way to program the re-arrangement in a systemic way. Therefore, we decided to stick to the detected programming mistake which assumes that the AR(p) model for arbitrary lags $\{p_1,\dots,p_n\}$ with $p_1,\dots,p_n\in\mathbb{Z}$, i.e. allowing for holes, can be rewritten as follows (which is not the case):
+$$
+X_t=\alpha+\phi_1 X_{t-p_1}+\dots+\phi_p X_{t-p_n}+\epsilon_t\\
+\Leftrightarrow \Delta X_t=\alpha+\beta X_{t-1}+\phi^*_1\Delta X_{t-p_1}+\dots+\phi_n^*\Delta X_{t-p_n}+\epsilon_t\\
+\text{such that} \quad \beta=(\phi_1+\dots+\phi_n-1)
+$$
+We are fully aware that this is wrong, but did not find the mistake soon enough to do the rearring by hand for each model separately, but sticked to the wrongly programmed solution provided below.
+
+Then the program checks whether the thus obtained ADF test statistic is lower than the $90\%$-significance level critical value from the Dickey-Fuller Distribution with or without drift (dependent on the selected model) and returns TRUE if this is the case. We do not further comment the code or its output for each stock but point out that the AR-model estimations are performed using the CSS-estimation method (conditional sum-of-squares) which proved to be more flexible towards the model specication to be estimated. 
+
 ```{r}
-# Estimate all models and pick specification with lowest AIC - APPLE
+# Estimate all models and pick specification with lowest SIC - APPLE
 ts <- data$APPLE
 sics <- rep(0, comb)
 
@@ -217,7 +268,7 @@ if(int==TRUE){
 ```
 
 ```{r}
-# Estimate all models and pick specification with lowest AIC - EXXON_MOBIL
+# Estimate all models and pick specification with lowest SIC - EXXON_MOBIL
 ts <- data$EXXON_MOBIL
 sics <- rep(0, comb)
 
@@ -238,7 +289,6 @@ for (i in 1:length(lag_struc[which.min(sics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
-struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -259,7 +309,7 @@ if(int==TRUE){
 ```
 
 ```{r}
-# Estimate all models and pick specification with lowest AIC - FORD
+# Estimate all models and pick specification with lowest SIC - FORD
 ts <- data$FORD
 sics <- rep(0, comb)
 
@@ -280,7 +330,6 @@ for (i in 1:length(lag_struc[which.min(sics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
-struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -301,7 +350,7 @@ if(int==TRUE){
 ```
 
 ```{r}
-# Estimate all models and pick specification with lowest AIC - GEN_ELECTRIC
+# Estimate all models and pick specification with lowest SIC - GEN_ELECTRIC
 ts <- data$GEN_ELECTRIC
 sics <- rep(0, comb)
 
@@ -322,7 +371,6 @@ for (i in 1:length(lag_struc[which.min(sics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
-struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -343,7 +391,7 @@ if(int==TRUE){
 ```
 
 ```{r}
-# Estimate all models and pick specification with lowest AIC - INTEL
+# Estimate all models and pick specification with lowest SIC - INTEL
 ts <- data$INTEL
 sics <- rep(0, comb)
 
@@ -364,7 +412,6 @@ for (i in 1:length(lag_struc[which.min(sics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
-struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -385,7 +432,7 @@ if(int==TRUE){
 ```
 
 ```{r}
-# Estimate all models and pick specification with highest AIC - MICROSOFT
+# Estimate all models and pick specification with highest SIC - MICROSOFT
 ts <- data$MICROSOFT
 sics <- rep(0, comb)
 
@@ -406,7 +453,6 @@ for (i in 1:length(lag_struc[which.min(sics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
-struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -427,7 +473,7 @@ if(int==TRUE){
 ```
 
 ```{r}
-# Estimate all models and pick specification with highest AIC - NETFLIX
+# Estimate all models and pick specification with highest SIC - NETFLIX
 ts <- data$NETFLIX
 sics <- rep(0, comb)
 
@@ -448,7 +494,6 @@ for (i in 1:length(lag_struc[which.min(sics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
-struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -469,7 +514,7 @@ if(int==TRUE){
 ```
 
 ```{r}
-# Estimate all models and pick specification with highest AIC - NOKIA
+# Estimate all models and pick specification with highest SIC - NOKIA
 ts <- data$NOKIA
 sics <- rep(0, comb)
 
@@ -490,7 +535,6 @@ for (i in 1:length(lag_struc[which.min(sics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
-struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -511,7 +555,7 @@ if(int==TRUE){
 ```
 
 ```{r}
-# Estimate all models and pick specification with highest AIC - SP500
+# Estimate all models and pick specification with highest SIC - SP500
 ts <- data$SP500
 sics <- rep(0, comb)
 
@@ -532,7 +576,6 @@ for (i in 1:length(lag_struc[which.min(sics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
-struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -553,7 +596,7 @@ if(int==TRUE){
 ```
 
 ```{r}
-# Estimate all models and pick specification with highest AIC - YAHOO
+# Estimate all models and pick specification with highest SIC - YAHOO
 ts <- data$YAHOO
 sics <- rep(0, comb)
 
@@ -574,7 +617,6 @@ for (i in 1:length(lag_struc[which.min(sics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
-struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -593,63 +635,96 @@ if(int==TRUE){
   adf< (-2.568)
 }
 ```
-4. Assume that both the stocks of Apple and Microsoft follow a random walk process. Produce
-a 5-day forecast for the stocks of Apple and Microsoft. Add 95% confidence bounds to your
-forecasts under the assumption of Gaussian innovations. Is there any investment advice
-you can give on these stocks? Is their value expected to increase or decrease?
+Based on our estimations we do not reject the unit-root hypothesis for any of the stock price time series at the $90\%$ confidence interval. Given the big the almost common-wisdom like empirical finding that stock prices follow a random walk, e.g. Fama (1995), this finding is little surprising. Following the popular efficient market hypothesis, any randomly arriving news about the fundamental value of stocks are always reflected in stock prices such that no further structure shall exist in the time series of stock prices the argument loosely speaking goes. We leave this issue here, and do not further elaborate on the related discussion but rather point to the less disuputed general wisdom that stock price time series are integrated of order 1.
 
+4. Assume that both the stocks of Apple and Microsoft follow a random walk process. Produce a 5-day forecast for the stocks of Apple and Microsoft. Add $95\%$ confidence bounds to your forecasts under the assumption of Gaussian innovations. Is there any investment advice you can give on these stocks? Is their value expected to increase or decrease?
+
+Assuming stock price $\{X_t\}$ follows a random walk:
+$$
+X_t=X_{t-1}+\varepsilon_t \quad \varepsilon_t\sim\mathcal{N}(0,\sigma^2)
+$$
+the h-step ahead forecast in period $T$ reads as
+$$
+\hat{X}_{T+h}=X_T
+$$
+with the estimated variance of the corresponding h-step ahead forecast error 
+$$
+\hat{\mathbb{Var}}(e_{T+h})=h\hat{\sigma}^2=h\frac{1}{T-1}\sum^T_{t=2}(x_t-x_{t-1})^2
+$$
+
+Under the Gaussianity assumption, the $95\%$-confidence intervals for $\hat{X}_{T+h}$ then formally read as follows:
+
+$$
+\hat{X}_{T+h}\pm1.96\cdot\sqrt{\hat{\mathbb{Var}}(e_{T+h})}
+$$
 ```{r}
 # Estimate sigma for APPLE & MICROSOFT
 sigma_aapl = sum(diff(data$APPLE)^2) / (length(diff(data$APPLE)))
 sigma_msft = sum(diff(data$MICROSOFT)^2) / (length(diff(data$MICROSOFT)))
 
-# Store last h observations for each stock price
-t = 20
-hist_aapl <- tail(data$APPLE,t)
-hist_msft <- tail(data$MICROSOFT,t)
-
 # Produce forecast
 h = 5
 forecast_aapl <-  rep( tail(data$APPLE,1),h)
 forecast_msft <- rep( tail(data$MICROSOFT,1),h)
-forecast_aapl <-  ts(forecast_aapl, start = t+1)
-forecast_msft <- ts(forecast_msft, start = t+1)
+forecast_aapl <-  ts(forecast_aapl)
+forecast_msft <- ts(forecast_msft)
+
+#Produce confice interval
+confup_aapl <- tail(data$APPLE,1) + 1.96 * sqrt(1:h) * sqrt(sigma_aapl)
+confdown_aapl <- tail(data$APPLE,1) - 1.96 *sqrt(1:h) * sqrt(sigma_aapl)
+confup_aapl <- ts(confup_aapl)
+confdown_aapl <- ts(confdown_aapl)
+
+confup_msft <- tail(data$MICROSOFT,1) + 1.96 * sqrt(1:h) * sqrt(sigma_msft)
+confdown_msft <- tail(data$MICROSOFT,1) - 1.96 * sqrt(1:h) * sqrt(sigma_msft)
+confup_msft <- ts(confup_msft)
+confdown_msft <- ts(confdown_msft)
 ```
+
+The forecasts and confidence intervals for both Apple and Microsoft are plotted below.
 
 ```{r}
 # Generate plot APPLE
 ts.plot(forecast_aapl)
-points(forecast_aapl - 1.96*sqrt(sigma_aapl), type="l", col=2, lty=2)
-points(forecast_aapl + 1.96*sqrt(sigma_aapl), type="l", col=2, lty=2)
+points(confup_aapl, type="l", col=2, lty=2)
+points(confdown_aapl, type="l", col=2, lty=2)
 ```
 ```{r}
 # Generate plot MICROSOFT
 ts.plot(forecast_msft)
-points(forecast_msft - 1.96*sqrt(sigma_msft), type="l", col=2, lty=2)
-points(forecast_msft + 1.96*sqrt(sigma_msft), type="l", col=2, lty=2)
+points(confup_msft, type="l", col=2, lty=2)
+points(confdown_msft, type="l", col=2, lty=2)
 ```
-5. Do you find a statistically significant contemporaneous relation between Microsoft and
-Exxon Mobile stock prices? Do you agree that changes in Microsoft stock prices are
-largely explained by fluctuations in the stock price of Exxon Mobile? Justify your answer.
+Based on these forecasts the only investment advice would be to hold the stock since no movement can be inferred from a random walk. This shows the unpredictability of stock prices implied by the random walk thesis briefly discussed above.
+
+5. Do you find a statistically significant contemporaneous relation between Microsoft and Exxon Mobile stock prices? Do you agree that changes in Microsoft stock prices are largely explained by fluctuations in the stock price of Exxon Mobile? Justify your answer.
+
+To test whether there is a statistically significant contemporaneous relation between Microsoft and Exxon Mobile stock prices we estimate a simple regression model:
+$$
+Microsoft_t=\alpha+\beta Exxon_t+\varepsilon_t
+$$
 
 ```{r}
-mod <- lm(data$APPLE ~ data$EXXON_MOBIL)
+mod <- lm(data$MICROSOFT ~ data$EXXON_MOBIL)
 summary(mod)
 ```
-SPURIOUS REGRESSION..
+The regression output suggests that there indeed exists some contemporenous relation since the estimated $\hat{\beta}$-coefficient is significantly positive suggesting that the two stocks move in tandem on average, such that one could explain at least some part of the variation in the stock price of Microsoft with that of Exxon Mobile. Under standard Asset Pricing model cross-sectional correlation of stocks may very well be seen as causality since stock may share common risk factors. However, given our conclusion above that both stocks are non-stationary (i.e. we could not reject the null hypothesis of a unit-root) one should be wary of the spurious regression phenomenon analyzed in part 1. Especially if one were to assume that both stock price time series follow a random walk, our simulation results suggest that both the $\hat{\beta}$-coefficient as well as estimated t-statistics converge to a random variable rendering the obtained regression results spurious and not be taken seriously.
+
 
 
 ## Question 2
 
 1. Show that the spurious regression problem does not occur when two I(1) variables are
 cointegrated using a Monte Carlo simulation study. Furthermore, analyze the claim of
-superconsistency of the estimator of the static cointegrating regression. 
+superconsistency of the estimator of the static cointegrating regression.
+
+First, we run a Monte Carlo Simulation for both cases, with X being once non-stationary but co-integrated with Y and once stationary (and also cointegrated with Y). The simulation is run for three different $T$, namely $T = \{50, 100, 200\}$. 
 
 ```{r}
 # Simulation with x being non-stationary
 set.seed(20)
 l = c(50, 100, 200)
-n = 10000
+n = 1000
 
 sigma_u = 1
 sigma_v = 1
@@ -686,7 +761,7 @@ for (j in 1:length(l)){
   for (i in 1:n){
     reg <- summary(lm(as.numeric(simulationsY[[j]][i,])~ as.numeric(simulationsX[[j]][i,])))
     est[i,1] <- reg$coef[2,1]
-    est[i,2] <- reg$coef[2,2]
+    est[i,2] <- reg$coef[2,1]/reg$coef[2,2]
     est[i,3] <- reg$r.squared
   }
   list_est[j] <- list(data.frame(est))
@@ -698,7 +773,7 @@ for (j in 1:length(l)){
 # Simulation with x being stationary
 set.seed(20)
 l = c(50, 100, 200)
-n = 10000
+n = 1000
 
 sigma_u = 1
 sigma_v = 1
@@ -735,7 +810,7 @@ for (j in 1:length(l)){
   for (i in 1:n){
     reg <- summary(lm(as.numeric(simulationsY_2[[j]][i,])~ as.numeric(simulationsX_2[[j]][i,])))
     est[i,1] <- reg$coef[2,1]
-    est[i,2] <- reg$coef[2,2]
+    est[i,2] <- reg$coef[2,1]/reg$coef[2,2]
     est[i,3] <- reg$r.squared
   }
   list2_est[j] <- list(data.frame(est))
@@ -745,12 +820,33 @@ for (j in 1:length(l)){
 
 ```{r}
 # Plot histograms
-plot(density(est[,1])$x,density(est[,1])$y,type="l",xlab="Distribution of estimated betas",ylab="Density")
-plot(density(est[,2])$x,density(est[,2])$y,type="l",xlab="Distribution of estimated S.E.",ylab="Density")
-plot(density(est[,3])$x,density(est[,3])$y,type="l",xlab="Distribution of R^2",ylab="Density")
-```
+plot(density(list_est[[3]][,1])$x,density(list_est[[3]][,1])$y,type="l",xlab="Estimated betas",ylab="Density", col=1, main = "Distribution of estiamted betas (X is non-stationary)")
+points(density(list_est[[2]][,1])$x, density(list_est[[2]][,1])$y, type="l",col=2)
+points(density(list_est[[1]][,1])$x, density(list_est[[1]][,1])$y, type="l",col=3)
 
-# muss noch guten vergleich finden
+plot(density(list2_est[[3]][,1])$x,density(list2_est[[3]][,1])$y,type="l",xlab="Estimated betas",ylab="Density", col=1, main = "Distribution of estiamted betas (X is stationary)")
+points(density(list2_est[[2]][,1])$x, density(list2_est[[2]][,1])$y, type="l",col=2)
+points(density(list2_est[[1]][,1])$x, density(list2_est[[1]][,1])$y, type="l",col=3)
+
+plot(density(list_est[[3]][,2])$x,density(list_est[[3]][,2])$y,type="l",xlab="Estimated t-ratio",ylab="Density", col=1, main = "Distribution of estimated t-ratio (X is non-stationary)")
+points(density(list_est[[2]][,2])$x, density(list_est[[2]][,2])$y, type="l",col=2)
+points(density(list_est[[1]][,2])$x, density(list_est[[1]][,2])$y, type="l",col=3)
+
+plot(density(list2_est[[3]][,2])$x,density(list2_est[[3]][,2])$y,type="l",xlab="Estimated t-ratio",ylab="Density", col=1, main = "Distribution of estimated t-ratio (X is stationary)")
+points(density(list2_est[[2]][,2])$x, density(list2_est[[2]][,2])$y, type="l",col=2)
+points(density(list2_est[[1]][,2])$x, density(list2_est[[1]][,2])$y, type="l",col=3)
+
+plot(density(list_est[[3]][,3])$x,density(list_est[[3]][,3])$y,type="l",xlab="R^2",ylab="Density", col=1, main = "R^1 (X is non-stationary)")
+points(density(list_est[[2]][,3])$x, density(list_est[[2]][,3])$y, type="l",col=2)
+points(density(list_est[[1]][,3])$x, density(list_est[[1]][,3])$y, type="l",col=3)
+
+plot(density(list2_est[[3]][,3])$x,density(list2_est[[3]][,3])$y,type="l",xlab="R^2",ylab="Density", col=1, main = "R^2 (X is stationary)")
+points(density(list2_est[[2]][,3])$x, density(list2_est[[2]][,3])$y, type="l",col=2)
+points(density(list2_est[[1]][,3])$x, density(list2_est[[1]][,3])$y, type="l",col=3)
+```
+Based on the plots, we can see that $\beta$ goes against zero for large samples in both cases (X being either non-stationary or stationary). Further, for both cases the t-statistic is normal and $R^2$ tends against zero for large samples. We cannot observe any randomness across the different beta, t-ratio and $R^2$ estimations. This shows that the spurious regression problem does not occur when two non-stationary processes are co-integrated. 
+
+The higher our T becomes (note that the black line refers to $T=200$, the red line refers to $T=100$ and the green line refers to $T=50$), the lower the distribution of the estimated $\beta$ as well as the distribution of the $R^2$. The distribution of the t-statistic is approximately the same for every T.  
 
 2. Plot both the aggregate consumption and aggregate income time-series (these series are
 called cons and inc respectively in the csv file). Compute and report 12-period ACF and
@@ -774,6 +870,7 @@ ggplot(data, aes(obs, CONS)) +
   geom_line() +
   scale_x_yearqtr(format = fmt)
 ```
+The graph shows that consumption steadily increaside since 1990. 
 
 ```{r}
 # Plot of income
@@ -782,6 +879,7 @@ ggplot(data, aes(obs, INC)) +
   geom_line() +
   scale_x_yearqtr(format = fmt)
 ```
+The graph shows that income steadily increased since 1990. However, around 2008 we can observe a small fall which is followed by increase again. 
 
 ```{r}
 Acf(
@@ -796,6 +894,7 @@ Pacf(
   lag.max = 12
 )
 ```
+
 ```{r}
 Acf(
   data$INC,
@@ -809,9 +908,11 @@ Pacf(
   lag.max = 12
 )
 ```
+The ACF is the autocorrelation function and measures the autocorrelation between $X_t$ and $X_{t-h} \forall h$, in our case for $h = \{1, 2, ..., 12\}$. The autocorrelation is an indicator for memory: the higher the correlation, the higher the time dependence. Hence, the ACF also is a good first indicator for the selection of the lags of our time series model (corresponding to the Box-Jenkins approach). The partial autocorrelation function (PACF) goes one step further, controlling for other lags. According to the graphs of both time series, we would have to include all 12 lags. However, according to the PACF graph, only the first lag is significant which shows that we need to control for other lags. Note that the confidence interval corresponds to $95\%$. 
 
 3. Perform an ADF unit-root test on each series using the general-to-specific approach and
 report the values of the test statistics. Is the unit-root hypothesis rejected in any of them?
+
 ```{r}
 # Set combinatorics where 1 last lag is intercept
 max_lag = 6
@@ -850,7 +951,7 @@ comb = comb -1
 ```
 
 ```{r}
-# Estimate all models and pick specification with lowest AIC - CONS
+# Estimate all models and pick specification with lowest SIC - CONS
 ts <- data$CONS
 sics <- rep(0, comb)
 
@@ -871,7 +972,7 @@ for (i in 1:length(lag_struc[which.min(sics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
-struc <- head(struc,-1)
+#struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -890,9 +991,10 @@ if(int==TRUE){
   adf< (-2.568)
 }
 ```
+We use the same code as in the previous questions. For consumption the specification with the lowest SIC is an AR(4) model, without the second lag. The estimated augmented Dickey-Fuller statistic is around $1.51$, which is above the critical value of $10\%$. Hence, we cannot reject the $H_0$ which is an indicator that we have a unit root. 
 
 ```{r}
-# Estimate all models and pick specification with lowest AIC - INC
+# Estimate all models and pick specification with lowest SIC - INC
 ts <- data$INC
 sics <- rep(0, (comb-1))
 
@@ -913,7 +1015,7 @@ for (i in 1:length(lag_struc[which.min(sics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
-struc <- head(struc,-1)
+#struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -932,12 +1034,13 @@ if(int==TRUE){
   adf< (-2.568)
 }
 ```
+For income the specification with the lowest SIC is an AR(2) model. The estimated augmented Dickey-Fuller statistic is around $2.57$, which is above the critical value of $10\%$. Hence, we cannot reject the $H_0$ which is an indicator that we have a unit root. 
 
-# check out problem 
-
-4. Perform an ADF unit-root test on the first difference of each series using the general-tospecific approach and report the values of the test statistics. Is the unit-root hypothesis
+4. Perform an ADF unit-root test on the first difference of each series using the general-to specific approach and report the values of the test statistics. Is the unit-root hypothesis
 rejected in any of them? What do you conclude about the order of integration of these
 time series?
+
+To perform an ADF unit-root test on the first difference, we calculate first the first-differences of each time series and then apply the same procedure as before. 
 
 ```{r}
 # Calculate first differences of income and consumption data
@@ -946,7 +1049,7 @@ data2 <- data %>%
 ```
 
 ```{r}
-# Estimate all models and pick specification with lowest AIC - CONS
+# Estimate all models and pick specification with lowest SIC - CONS
 ts <- data2$CONS
 sics <- rep(0, comb)
 
@@ -967,7 +1070,7 @@ for (i in 1:length(lag_struc[which.min(sics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
-struc <- head(struc,-1)
+#struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -986,8 +1089,10 @@ if(int==TRUE){
   adf< (-2.568)
 }
 ```
+For consumption, the specification with the lowest SIC is an AR(4) model, with the first lag exluded. The test statistic is around $-4.746$. As it is below the critical value of $1\%$, we can reject the $H_0$. Hence, we can conclude that the order of integration of consumption is 1 as the order of integration of its first difference is zero.
+
 ```{r}
-# Estimate all models and pick specification with lowest AIC - INC
+# Estimate all models and pick specification with lowest SIC - INC
 ts <- data2$INC
 sics <- rep(0, comb)
 
@@ -998,7 +1103,7 @@ for (i in 1:comb){
 }
 min(sics)
 arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(sics),], method ="CSS")
-INCfc <- arima(x=ts, order = c(max_lag -1,0,0), fixed = lag_struc[which.min(sics),], method ="CSS") # for 4.8
+
 # Perform ADF Test
 ts <- ts(ts)
 struc <- c(0)
@@ -1008,7 +1113,7 @@ for (i in 1:length(lag_struc[which.min(sics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
-struc <- head(struc,-1)
+#struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -1027,12 +1132,15 @@ if(int==TRUE){
   adf< (-2.568)
 }
 ```
+For income, the specification with the lowest SIC is an AR(1) model. The test statistic is around $2.82$. As it is above the critical value of $10\%$, we cannot reject the $H_0$. Hence, we can conclude that the order of integration of income must be above 1. Given that we are searching for co-integration and that in economic data an integration order above 1 is very seldom, there could be a mistake. One possible source could be the programming mistake we elaborated on in the previous question. In case the order of integration is indeed higher, we would have to continue taking differences until we can reject the $H_0$ to find the order of integration.
 
 5. Assuming both series are I(1), test for cointegration between consumption and income by
 regressing consumption on income and performing a unit-root test on the residuals. Report
 the estimated regression coefficients. Plot the regression residuals. Use the Schwartz
 Information Criterion (SIC) to determine the number of ADF lags in your unit-root residual
 test. Report the cointegration test statistic. Do you reject cointegration?
+
+First, we run a static regression of consumption on income $C_t = \delta + \lambda I_t + Z_t$ (note that $C_t$ is consumption and $I_t$ is income in $t$):
 
 ```{r}
 # Regress Consumption on Income to get get estimated regression coefficients
@@ -1042,6 +1150,9 @@ delta <- test$coefficients[1]
 lambda
 delta
 ```
+
+Our estimated regression coefficients are $\lambda \approx 0.665$ and $\delta \approx  6783.37$.
+Next, we calculate the regression residuals $\hat{Z_t}$ using our estimated regression coefficients and plot them. The estimated regression residuals have a mean approximately around zero. However, their variance increases with time. 
 
 ```{r}
 # Calculate regression residuals
@@ -1055,8 +1166,12 @@ ggplot(data, aes(obs, Z)) +
   geom_point() + 
   scale_x_yearqtr(format = fmt)
 ```
+
+Next, we estimate to determine the number of ADF lags in our unit-root residual and conduct a DF cointegration test. The DF test for no-cointegration between consumption and income makes use of the t-ratio test statistic $DFNC = \frac{\hat{\phi}-1}{SE(\hat{\phi})}$. $\hat{\phi}$ is the estimated parameter from an AR(1) model $\hat{Z_t} = \phi \hat{Z_{t-1}} + \epsilon_t$. The null hypothesis is $H_0: \phi = 1$ against $H_1: |\phi| < 1$. Note that we have to use other critical values. For two I(1) series without a trend for which we test the nullhypothesis of non-cointegration the critical values are $-3.9001$ at $1\%$, $-3.337$ at
+$5\%$ and $-3.0462$ at $10\%$ (MacKinnon, 1991, p. 9). 
+
 ```{r}
-# Estimate all models and pick specification with lowest AIC - INC
+# Estimate all models and pick specification with lowest SIC - INC
 ts <- data$Z
 sics <- rep(0, comb)
 
@@ -1077,7 +1192,7 @@ for (i in 1:length(lag_struc[which.min(sics),]-1)){
   } 
 }
 struc <- as.numeric(struc[,-1])
-struc <- head(struc,-1)
+# struc <- head(struc,-1)
 if(is.na(lag_struc[which.min(sics),i])){
   int = TRUE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc))
@@ -1085,90 +1200,110 @@ if(is.na(lag_struc[which.min(sics),i])){
   int = FALSE
   mod <- dynlm(diff(ts) ~ L(ts,1) + L(diff(ts),struc)-1)
 }
-beta = summary(mod)$coefficients[1,1]
+phi = summary(mod)$coefficients[1,1]
 se = summary(mod)$coefficients[1,2]
-adf = beta/se
-adf
+dfnc = (phi-1)/se
+dfnc
 
 if(int==TRUE){
-  adf< (-1.616)
+  adf< (-3.0462)
 }else{
-  adf< (-2.568)
+  adf< (-3.9001)
 }
 ```
-As H0 is rejected, we have cointegration.
+According to SIC the number of ADF lags in our unit-root residual test are 5, excluding the second and the third lag. Our co-integration test statistic is around $-21.04$. As the statistic is below the critical value of $1\%$, we can reject our null hypothesis which means that $\hat{Z_t} \sim I(0)$ and that we have co-integration between consumption and income. 
 
 6. Estimate an error correction model for consumption using the estimated residuals from
 the cointegration regression above. Use a general-to-specific modeling approach for the
 short-run dynamics. Report the estimated model. Report and interpret the short-run and
 long-run multipliers. Report and interpret the error correction coefficient.
 
+For the general-to-specific modeling approach, we start estimating an error correction model with four legs for the first-difference of consumption and income and exclude insignificant lags step by step. 
 ```{r}
-# Transform data into times seires format
+# Transform data into times series format
 tsCONS <- ts(data$CONS, start= c(1988, 1), end = c(2012, 1), frequency = 4)
 tsINC <- ts(data$INC, start= c(1988, 1), end = c(2012, 1), frequency = 4)
 tsZ <- ts(data$Z, start= c(1988, 1), end = c(2012, 1), frequency = 4)
 ```
 
 ```{r}
-#Selecting the Optimal Number of Lags (Recall, this is p - 1)
-data2 <- na.omit(data2)
-lagselect <- VARselect(data2$CONS, lag.max = 7, type = "const")
-lagselect$selection
-lagselect$criteria
-```
-```{r}
-# use one lag according to SIC (2-1 = 1), and co-integration order of 1 (from previous subquestion)
-# estimate error correction model
-# data2 <- na.omit(data2)
 ecm <- dynlm(diff(tsCONS) ~ L(tsZ, 1) + L(diff(tsINC), 0:4) + L(diff(tsCONS), 1:4))
-# ecm <- VECM(dset, 1, r = 1, estim =("2OLS"))
 summary(ecm)
-# drio first lag of CONS blabla collinearity
 ```
-y ~ x * lag(y,-1)
+
+```{r}
+ecm <- dynlm(diff(tsCONS) ~ L(tsZ, 1) + L(diff(tsINC), 0:3) + L(diff(tsCONS), 1:3))
+summary(ecm)
+```
+
+```{r}
+ecm <- dynlm(diff(tsCONS) ~ L(tsZ, 1) + L(diff(tsINC), 0:2) + L(diff(tsCONS), 1:3))
+summary(ecm)
+```
+
+```{r}
+ecm <- dynlm(diff(tsCONS) ~ L(tsZ, 1) + L(diff(tsINC), 0:1) + L(diff(tsCONS), c(1,3)))
+summary(ecm)
+```
+
+```{r}
+ecm <- dynlm(diff(tsCONS) ~ L(tsZ, 1) +L(diff(tsINC), 0) + L(diff(tsCONS), c(1,3)))
+summary(ecm)
+```
+
+```{r}
+ecm <- dynlm(diff(tsCONS) ~ L(tsZ, 1) +L(diff(tsINC), 0) + L(diff(tsCONS), 3))
+summary(ecm)
+```
+Our final model is
+$$
+\Delta Y_t = \gamma Z_{t-1} + \beta_0 \Delta X_t + \phi_3 \Delta Y_{t-3} + \epsilon_t
+$$
+
+In the long-run equilibrium, we have $Y_t = \bar{Y}, X_t = \bar{X_t}$, $\Delta \bar{Y} = 0$ and $\Delta \bar{X} = 0$. Hence, our equation becomes 
+
+$$
+0 = \gamma Z_{t-1} \Rightarrow 0 = \bar{Y} -\delta -\lambda\bar{X}
+$$
+
+This can be rearranged to 
+$$
+\bar{Y} = \delta + \lambda \bar{X}
+$$
+which is why our long-run multiplier is $\lambda = 0.6651404$ (as we derived in IV.5).
+
+Our short-run multiplier measures the expected impact on $\Delta Y_t$ of a unit increase in $\Delta X_t$. Therefore, our short-run multiplier equals $0.17725$.
+
+The error correction coefficient corresponds to $\gamma$ in our model and equals $-0.12151$. It determines the adjustment speed to the long-run equilibrium which is implied by $X_{t-1}$. As it is below zero, we can conclude that correction to deviations from long-run equilibrium exists. However, as $\gamma$ is between zero and minus one, we only have partial error correction. 
+
+7. How strong is the correction to equilibrium? Is there over-shooting? Do you find evidence
+of Granger causality? Justify your answer.
+
+We have no over-shooting as the error correction coefficient is between zero and minus one. For overshooting, we would need $-2 < \gamma < -1$. However, with $\gamma = -0.12151$, the error correction coefficient is quite close to zero which means that the adjustment is rather slow. 
+
+We have Granger Causality when a time-series $\{X_t\}$ causes a time-series $\{Y_t\}$ which means that past values of $\{X_t\}$ provide statistically significant information on future values of $\{Y_t\}$. As our coefficient for $\Delta X_t$ is significant there might by Granger Causality. However, we cannot conclude definitely whether the significance stems from $X_t$ or $X_{t-1}$ as $\Delta X_t = X_{t-1} - X_{t}$.
+
 8. At the peak of the recession, during the 2nd quarter of 2009, you are asked to forecast the
 value of consumption for the 3rd quarter of 2009. Do you expect aggregate consumption
 to raise or fall? Report the predicted change in the value of consumption. How much of
-this change in consumption is due to the ‘correction mechanism’ alone? Report your point
+this change in consumption is due to the correction mechanism alone? Report your point
 forecast for consumption for the 3rd quarter of 2009.
-```{r}
-ecm <- dynlm(diff(tsCONS) ~ L(tsZ, 1) + L(diff(tsINC), 0:3) + L(diff(tsCONS), 1:3))
-# ecm <- VECM(dset, 1, r = 1, estim =("2OLS"))
-summary(ecm)
-```
-```{r}
-ecm <- dynlm(diff(tsCONS) ~ L(tsZ, 1) + L(diff(tsINC), 0:2) + L(diff(tsCONS), 1:3))
-# ecm <- VECM(dset, 1, r = 1, estim =("2OLS"))
-summary(ecm)
-```
-```{r}
-ecm <- dynlm(diff(tsCONS) ~ L(tsZ, 1) + L(diff(tsINC), 0:1) + L(diff(tsCONS), c(1,3)))
-# ecm <- VECM(dset, 1, r = 1, estim =("2OLS"))
-summary(ecm)
-```
-```{r}
-ecm <- dynlm(diff(tsCONS) ~ L(tsZ, 1) +L(diff(tsINC), 0) + L(diff(tsCONS), c(1,3)))
-# ecm <- VECM(dset, 1, r = 1, estim =("2OLS"))
-summary(ecm)
-```
-```{r}
-ecm <- dynlm(diff(tsCONS) ~ L(tsZ, 1) +L(diff(tsINC), 0) + L(diff(tsCONS), 3))
-# ecm <- VECM(dset, 1, r = 1, estim =("2OLS"))
-summary(ecm)
-```
+
+We expect aggregate consumption to raise as the coefficients for $\Delta Y_{t-3}$ and $\Delta X_t$ are higher stronger than the error correction coefficient. However, it also depends on the lags. If they are positive then the outcome should corresponds to our expectations. If they are negative, then aggregate consumption might also fall. 
 
 ```{r}
 i = 86
 pred_delta <- ecm$coefficients[1] + ecm$coefficients[2]*data2$Z[i-1] +  ecm$coefficients[3]*data2$INC[i] + ecm$coefficients[4]*data2$CONS[i-3]
 as.numeric(pred_delta)
 ```
+The predicted change is $-246.1442$.
 
 ```{r}
 i = 86
 pred_delta_lr <- ecm$coefficients[2]*data2$Z[i-1]
 as.numeric(pred_delta_lr)
 ```
+The change in consumption due to the correction mechanism alone is around $-191.3947$.
 
 ```{r}
 i = 86
@@ -1181,3 +1316,10 @@ j=86
 pred <- data$CONS[j] + pred_delta
 as.numeric(pred)
 ```
+The point forecast for consumption for the 3rd quarter of 2009 is $86502.66$.
+
+## References
+
+Fama, E. F. (1995). Random walks in stock market prices. Financial analysts journal, 51(1), 75-80.
+
+MacKinnon, J. G. (1991). Critical values for cointegration tests. In Eds., Long-Run Economic Relationship: Readings in Cointegration.
